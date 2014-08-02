@@ -3,7 +3,7 @@
     korail2.stations
     ~~~~~~~~~~~~~~~~
 
-    Korail station information in dictionary format.
+    Korail station information.
     All code of here is from `stations.py
     <https://raw.githubusercontent.com/devxoul/korail/master/korail/stations.py>`_ by
     `Suyeol Jeon <http://xoul.kr/>`_ at 2014.
