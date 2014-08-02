@@ -9,11 +9,16 @@ This project was inspired from [korail](https://github.com/devxoul/korail) of [d
 Installing
 ----------
 
-1. using pip:
+To install korail2, simply:
+
     $ pip install korail2
-2. using easy_install:
+
+Or, you can use:
+
     $ easy_install korail2
-3. using git
+
+Or, you can also install manually:
+
     $ git clone git://github.com/carpedm20/korail2.git
     $ cd korail2
     $ python setup.py install
