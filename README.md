@@ -38,23 +38,25 @@ First, you need to create a Korail object.
 
 ### 2. Search train ###
 
-You can search train schedules `search_train()` method. `search_train()` method takes these arguments:
+You can search train schedules `search_train` method. `search_train` method takes these arguments:
 
 - dep : A departure station in Korean  ex) '서울'
 - arr : A arrival station in Korean  ex) '부산'
 - date : (optional) A departure date in `yyyyMMdd` format
 - time : (optional) A departure time in `hhmmss` format
 - train_type: (optional) A type of train
-     - 00: KTX, KTX-산천
-     - 01: 새마을호
-     - 02: 무궁화호
-     - 03: 통근열차
-     - 04: 누리로
-     - 05: 전체 (기본값)
-     - 06: 공학직통
-     - 07: KTX-산천
-     - 08: ITX-새마을
-     - 09: ITX-청춘
+    - 00: KTX, KTX-산천
+    - 01: 새마을호
+    - 02: 무궁화호
+    - 03: 통근열차
+    - 04: 누리로
+    - 05: 전체 (기본값)
+    - 06: 공학직통
+    - 07: KTX-산천
+    - 08: ITX-새마을
+    - 09: ITX-청춘
+
+Below is a sample code of `search_train`:
 
     dep = '서울'
     arr = '동대구'
