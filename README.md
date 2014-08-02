@@ -5,6 +5,8 @@ Korail (www.letskorail.com) wrapper for Python.
 
 This project was inspired from [korail](https://github.com/devxoul/korail) of [devxoul](https://github.com/devxoul)
 
+[korail](https://github.com/devxoul/korail) is not working anymore becuase of a huge change in API
+
 
 Installing
 ----------

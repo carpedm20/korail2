@@ -1,86 +1,129 @@
-ndrive manual
-=============
+korail2 manual
+==============
 
 Introduction
 ------------
 
-*ndrive* is a python library that can provide an access to Naver Ndrive. This is not an official Ndrive python API, so some features may not be implemented, yet.
+Korail (www.letskorail.com) wrapper for Python.
 
-    >>> from ndrive import Ndrive
-    >>> nd = Ndrive()
-    >>> nd.login("YOUR_ID","YOUR_PASSWORD")
-    >>> nd.uploadFile("test.txt",'/test.txt',True)
-
-
-Key Features
-------------
-
-* Download and upload a file
-* Get file and directory list of Ndrive directories
-* Make a url share link for a specific directory or file
-* Search Ndrive file and  directory
-* Get properties of file and directory
+This project was inspired from
+`korail <https://github.com/devxoul/korail>`_ of
+`devxoul <https://github.com/devxoul>`_
 
 
-Installation
-------------
+Installing
+----------
 
-This package is available in PyPI. To install it in your system, use easy_install::
+To install korail2, simply:
 
-    $ easy_install ndrive
+::
 
-Or use pip::
+    $ pip install korail2
 
-    $ pip install ndrive
+Or, you can use:
 
-Or check out developement version::
+::
 
-    $ git clone git://github.com/carpedm20/ndrive.git
+    $ easy_install korail2
 
+Or, you can also install manually:
 
-Quick Start
------------
+::
 
-If you want to start with Ndrive module, you need to *login* to Ndrive first. Just make a ``Ndrive`` object and use ``login`` method.
+    $ git clone git://github.com/carpedm20/korail2.git
+    $ cd korail2
+    $ python setup.py install
 
-Login::
+Using
+-----
 
-    nd = Ndrive()
-    nd.login("YOUR_ID","YOUR_PASSWORD")
+1. Login
+~~~~~~~~
 
+First, you need to create a Korail object.
 
-Then you might want to *download* a file from your Ndrive, but you might don't know exact filename in Ndrive directory. Then, you can use ``getList`` method to *get list* of files and directory of given directory.
+::
 
-*Don't forget to put / in front of the Ndrive path, which indicate root directory of Ndrive*
+    >>> from korail2 import Korail
+    >>> korail = Korail("12345678", YOUR_PASSWORD) # with membership number
+    >>> korail = Korail("carpedm20@gmail.com", YOUR_PASSWORD) # with email
+    >>> korail = Korail("010-9964-xxxx", YOUR_PASSWORD) # with phone number
 
-Get file and directory List::
+2. Search train
+~~~~~~~~~~~~~~~
 
-    nd_list = nd.getList('/', type=3)
-    print nd_list
+You can search train schedules ``search_train`` method. ``search_train``
+method takes these arguments:
 
-If you find a file, then you can download the file to your local directory.
+-  dep : A departure station in Korean ex) '서울'
+-  arr : A arrival station in Korean ex) '부산'
+-  date : (optional) A departure date in ``yyyyMMdd`` format
+-  time : (optional) A departure time in ``hhmmss`` format
+-  train\_type: (optional) A type of train
 
-Download::
+   -  00: KTX
+   -  01: 새마을호
+   -  02: 무궁화호
+   -  03: 통근열차
+   -  04: 누리로
+   -  05: 전체 (기본값)
+   -  06: 공학직통
+   -  07: KTX-산천
+   -  08: ITX-새마을
+   -  09: ITX-청춘
 
-    nd.download('/Picture/flower.png', './flower.png')
+Below is a sample code of ``search_train``:
 
-Or you can upload a file::
+::
 
-    nd.puloadFile('./flower.png','/Picture/flower.png')
+    >>> dep = '서울'
+    >>> arr = '동대구'
+    >>> date = '20140815'
+    >>> time = '144000'
+    >>> trains = korail.search_train(dep, arr, date, time)
+    [[KTX] 8월 3일, 서울~부산(11:00~13:42) [특실:1][일반실:1] 예약가능,
+     [ITX-새마을] 8월 3일, 서울~부산(11:04~16:00) [일반실:1] 예약가능,
+     [무궁화호] 8월 3일, 서울~부산(11:08~16:54) [일반실:0] 입석 역발매중,
+     [ITX-새마을] 8월 3일, 서울~부산(11:50~16:50) [일반실:0] 입석 역발매중,
+     [KTX] 8월 3일, 서울~부산(12:00~14:43) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:30~15:13) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:40~15:45) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:55~15:26) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(13:00~15:37) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(13:10~15:58) [특실:1][일반실:1] 예약가능]
 
-You can make a test directory at root directory::
+3. Make a reservation
+~~~~~~~~~~~~~~~~~~~~~
 
-    nd.makeDirectory('/test')
+You can get your tickes with ``tickets`` method.
 
-and move a file from root to a created test directory::
+::
 
-    nd.doMove('/flower.png','/test/flower.png')
+    >>> trains = korail.search_train(dep, arr, date, time)
+    >>> seat = korail.reserve(trains[0])
+    정상처리되었습니다
+    동일시간대 예약발매내역이 있습니다.
+    >>> seat
+    [KTX] 8월 3일, 서울~부산(11:00~:) 16호 6A
+
+4. Get tickets
+~~~~~~~~~~~~~~
+
+You can get your tickes with ``tickets`` method.
+
+::
+
+    >>> tickets = k.tickets()
+    정상발매처리,정상발권처리
+    >>> tickets
+    [[KTX] 8월 10일, 동대구~울산(09:26~09:54) => 5호 4A, 13900원]
+
 
 
 API documentation
 -----------------
 
-This is the information of class and method of *ndrive*.
+This is the information of class and method of *Korail*.
 
 .. autoclass:: korail2.Korail
     :members:
