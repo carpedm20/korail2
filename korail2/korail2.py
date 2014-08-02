@@ -91,7 +91,7 @@ class Schedule(object):
         dep_time = self.dep_time[:2] + ":" + self.dep_time[2:4]
         arr_time = self.arr_time[:2] + ":" + self.arr_time[2:4]
 
-        repr_str = '[%s #%s] %s~%s(%s~%s) ' % (
+        repr_str = '[%s #%s] %s~%s(%s~%s)' % (
             self.train_type_name,
             self.train_no,
             self.dep_name,
@@ -183,14 +183,16 @@ class Ticket(Train):
     def __repr__(self):
         repr_str = super(Train, self).__repr__()
 
-        repr_str += " => %s호" % car_no
+        repr_str += " => %s호" % self.car_no
 
         if int(self.seat_no_count) != 1:
-            repr_str += " %s~%s" % (seat_no, seat_no_end)
+            repr_str += " %s~%s" % (self.seat_no, self.seat_no_end)
         else:
-            repr_str += " %s" % seat_no
+            repr_str += " %s" % self.seat_no
 
-        repr_str += ", %s원" % price
+        repr_str += ", %s원" % self.price
+
+        return repr_str
 
     def get_ticket_no(self):
         return "%s-%s-%s-%s" % (sale_info1,

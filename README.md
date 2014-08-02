@@ -73,6 +73,13 @@ Below is a sample code of `search_train`:
      [KTX #155] 서울~동대구(15:30~17:19) [특실:1][일반실:1] 예약가능,
      [무궁화호 #1303] 서울~동대구(15:35~19:40) [일반실:1] 예약가능]
 
+### 3. Get tickets###
+
+You can get your tickes with `tickets` method.
+
+    >>> k.tickets()
+    [[KTX #113] 동대구~울산(09:26~09:54)  => 5호 4A, 13900원]
+
 
 License
 -------
