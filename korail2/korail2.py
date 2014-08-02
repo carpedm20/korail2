@@ -36,6 +36,10 @@ KORAIL_PAYMENT_VOUNCHER = "%s/ebizmw/PrdPkgBoucherView.do" % KORAIL_DOMAIN
 
 
 class Train(object):
+    """Korail train object. Highly inspired by `korail.py
+    <https://raw.githubusercontent.com/devxoul/korail/master/korail/korail.py>`_
+    by `Suyeol Jeon <http://xoul.kr/>`_ at 2014.
+    """
 
     #: 기차 종류
     #: 00: KTX
