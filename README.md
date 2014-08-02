@@ -30,11 +30,10 @@ Using
 
 First, you need to create a Korail object.
 
-    from korail2 import Korail
-
-    korail = Korail("12345678", YOUR_PASSWORD) # with membership number
-    korail = Korail("carpedm20@gmail.com", YOUR_PASSWORD) # with email
-    korail = Korail("010-9964-xxxx", YOUR_PASSWORD) # with phone number
+    >>> from korail2 import Korail
+    >>> korail = Korail("12345678", YOUR_PASSWORD) # with membership number
+    >>> korail = Korail("carpedm20@gmail.com", YOUR_PASSWORD) # with email
+    >>> korail = Korail("010-9964-xxxx", YOUR_PASSWORD) # with phone number
 
 ### 2. Search train ###
 
@@ -58,11 +57,21 @@ You can search train schedules `search_train` method. `search_train` method take
 
 Below is a sample code of `search_train`:
 
-    dep = '서울'
-    arr = '동대구'
-    date = '20140815'
-    time = '144000'
-    trains = korail.search_train(dep, arr, date, time)
+    >>> dep = '서울'
+    >>> arr = '동대구'
+    >>> date = '20140815'
+    >>> time = '144000'
+    >>> trains = korail.search_train(dep, arr, date, time)
+    [[KTX #145] 서울~동대구(14:00~15:54) [특실:1][일반실:1] 예약가능,
+     [ITX-새마을 #1063] 서울~동대구(14:07~17:47) [일반실:1] 예약가능,
+     [KTX #147] 서울~동대구(14:15~16:04) [특실:1][일반실:1] 예약가능,
+     [무궁화호 #1215] 서울~동대구(14:25~18:15) [일반실:1] 예약가능,
+     [KTX #149] 서울~동대구(14:30~16:18) [특실:1][일반실:1] 예약가능,
+     [KTX #307] 서울~동대구(14:40~16:29) [특실:1][일반실:1] 예약가능,
+     [KTX #153] 서울~동대구(15:00~16:53) [특실:1][일반실:1] 예약가능,
+     [무궁화호 #1217] 서울~동대구(15:03~18:48) [일반실:1] 예약가능,
+     [KTX #155] 서울~동대구(15:30~17:19) [특실:1][일반실:1] 예약가능,
+     [무궁화호 #1303] 서울~동대구(15:35~19:40) [일반실:1] 예약가능]
 
 
 License
