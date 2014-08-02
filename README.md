@@ -73,7 +73,15 @@ Below is a sample code of `search_train`:
      [KTX #155] 서울~동대구(15:30~17:19) [특실:1][일반실:1] 예약가능,
      [무궁화호 #1303] 서울~동대구(15:35~19:40) [일반실:1] 예약가능]
 
-### 3. Get tickets###
+### 3. Make a reservation ####
+
+You can get your tickes with `tickets` method.
+
+    >>> trains = korail.search_train(dep, arr, date, time)
+    >>> seat = korail.reserve(trains[0])
+    [KTX #131] 서울~부산(11:00~:) 07호 [14A]
+
+### 4. Get tickets###
 
 You can get your tickes with `tickets` method.
 

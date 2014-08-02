@@ -190,9 +190,9 @@ class Ticket(Train):
         repr_str += " => %s호" % self.car_no
 
         if int(self.seat_no_count) != 1:
-            repr_str += " [%s~%s]" % (self.seat_no, self.seat_no_end)
+            repr_str += " %s~%s" % (self.seat_no, self.seat_no_end)
         else:
-            repr_str += " [%s]" % self.seat_no
+            repr_str += " %s" % self.seat_no
 
         repr_str += ", %s원" % self.price
 
@@ -221,7 +221,7 @@ class Seat(Schedule):
 
     def __repr__(self):
         repr_str = self.schedule.__repr__()
-        repr_str += "%s호 [%s]" % (self.car_no, self.seat_no)
+        repr_str += " %s호 %s" % (self.car_no, self.seat_no)
 
         return repr_str
 
@@ -496,7 +496,7 @@ class Korail(object):
 
                     seats.append(seat)
 
-            return seats
+            return seats[0]
     
     def tickets(self):
         """Get list of tickets"""
