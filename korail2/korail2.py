@@ -27,15 +27,17 @@ KORAIL_MOBILE = "%s/classes/com.korail.mobile" % KORAIL_DOMAIN
 
 KORAIL_LOGIN            = "%s.login.Login" % KORAIL_MOBILE
 KORAIL_LOGOUT           = "%s.common.logout" % KORAIL_MOBILE
+KORAIL_SEARCH_SCHEDULE  = "%s.seatMovie.ScheduleView" % KORAIL_MOBILE
+KORAIL_MYTICKETLIST     = "%s.myTicket.MyTicketList" % KORAIL_MOBILE
+
 KORAIL_STATION_DB       = "%s.common.stationinfo?device=ip" % KORAIL_MOBILE
 KORAIL_STATION_DB_DATA  = "%s.common.stationdata" % KORAIL_MOBILE
 KORAIL_EVENT            = "%s.common.event" % KORAIL_MOBILE
-KORAIL_SEARCH_SCHEDULE  = "%s.seatMovie.ScheduleView" % KORAIL_MOBILE
 KORAIL_PAYMENT          = "%s/ebizmw/PrdPkgMainList.do" % KORAIL_DOMAIN
 KORAIL_PAYMENT_VOUNCHER = "%s/ebizmw/PrdPkgBoucherView.do" % KORAIL_DOMAIN
 
 
-class Train(object):
+class Schedule(object):
     """Korail train object. Highly inspired by `korail.py
     <https://raw.githubusercontent.com/devxoul/korail/master/korail/korail.py>`_
     by `Suyeol Jeon <http://xoul.kr/>`_ at 2014.
@@ -60,8 +62,6 @@ class Train(object):
     #: 기차 번호
     train_no = None # h_trn_no
 
-    #: 지연 시간 (hhmm)
-    delay_time = None # h_expct_dlay_hr
 
     #: 출발역 이름
     dep_name = None # h_dpt_rs_stn_nm
@@ -69,14 +69,11 @@ class Train(object):
     #: 출발역 코드
     dep_code = None # h_dpt_rs_stn_cd
 
-    #: 출발날짜 (yyyyMMdd)
+    #: 출발 날짜 (yyyyMMdd)
     dep_date = None # h_dpt_dt
 
-    #: 출발 시각1 (hhmmss)
+    #: 출발 시각 (hhmmss)
     dep_time = None # h_dpt_tm
-
-    #: 출발 시각2 (hh:mm)
-    dep_time_qb = None # h_dpt_tm_qb
 
     #: 도착역 이름
     arr_name = None # h_arv_rs_stn_nm
@@ -84,14 +81,31 @@ class Train(object):
     #: 도착역 코드
     arr_code = None # h_arv_rs_stn_cd
 
-    #: 도착날짜 (yyyyMMdd)
+    #: 도착 날짜 (yyyyMMdd)
     dep_date = None # h_arv_dt
 
-    #: 도착 시각1 (hhmmss)
+    #: 도착 시각 (hhmmss)
     arr_time = None # h_arv_tm
 
-    #: 도착 시각2 (hh:mm)
-    arr_time_qb = None # h_arv_tm_qb
+    def __repr__(self):
+        dep_time = self.dep_time[:2] + ":" + self.dep_time[2:4]
+        arr_time = self.arr_time[:2] + ":" + self.arr_time[2:4]
+
+        repr_str = '[%s #%s] %s~%s(%s~%s) ' % (
+            self.train_type_name,
+            self.train_no,
+            self.dep_name,
+            self.arr_name,
+            dep_time,
+            arr_time,
+        )
+
+        return repr_str
+
+
+class Train(Schedule):
+    #: 지연 시간 (hhmm)
+    delay_time = None # h_expct_dlay_hr
 
     #: 예약 가능 여부
     reserve_possible = False # h_rsv_psb_flg ('Y' or 'N')
@@ -112,14 +126,7 @@ class Train(object):
     general_seat = False # h_gen_rsv_cd
 
     def __repr__(self):
-        repr_str = '[%s #%s] %s~%s(%s~%s) ' % (
-            self.train_type_name,
-            self.train_no,
-            self.dep_name,
-            self.arr_name,
-            self.dep_time_qb,
-            self.arr_time_qb,
-        )
+        repr_str = super(Train, self).__repr__()
 
         if self.special_seat != '00':
             if  self.special_seat == '11':
@@ -137,6 +144,59 @@ class Train(object):
 
         return repr_str + " " + self.reserve_possible_name.replace('\n',' ')
 
+
+class Ticket(Train):
+    """Ticket object"""
+    #: 열차 번호
+    car_no = None # h_srcar_no
+
+    #: 자리 갯수
+    seat_no_count = None # h_seat_cnt  ex) 001
+
+    #: 자리 번호
+    seat_no = None # h_seat_no
+
+    #: 자리 번호
+    seat_no_end = None # h_seat_no_end
+
+    #: 구매자 성함
+    buyer_name = None # h_buy_ps_nm
+
+    #: 구매 날짜 (yyyyMMdd)
+    sale_date = None # h_orgtk_sale_dt
+
+    #: 구매 정보1
+    sale_info1 = None # h_orgtk_wct_no
+
+    #: 구매 정보2
+    sale_info2 = None # h_orgtk_ret_sale_dt
+
+    #: 구매 정보3
+    sale_info3 = None # h_orgtk_sale_sqno
+
+    #: 구매 정보4
+    sale_info4 = None # h_orgtk_ret_pwd
+
+    #: 구매 가격
+    price = None # h_rcvd_amt  ex) 00013900
+
+    def __repr__(self):
+        repr_str = super(Train, self).__repr__()
+
+        repr_str += " => %s호" % car_no
+
+        if int(self.seat_no_count) != 1:
+            repr_str += " %s~%s" % (seat_no, seat_no_end)
+        else:
+            repr_str += " %s" % seat_no
+
+        repr_str += ", %s원" % price
+
+    def get_ticket_no(self):
+        return "%s-%s-%s-%s" % (sale_info1,
+                                sale_info2,
+                                sale_info3,
+                                sale_info4)
 
 class Korail(object):
     """Korail object"""
@@ -192,6 +252,15 @@ class Korail(object):
         url = KORAIL_LOGOUT
         self._session.get(url)
 
+    def result_check(self, j):
+        if j['strResult'] == 'FAIL':
+            h_msg_cd  = j['h_msg_cd'].encode('utf-8')
+            h_msg_txt = j['h_msg_txt'].encode('utf-8')
+
+            raise Exception("%s (%s)" % (h_msg_txt, h_msg_cd))
+        else:
+            return True
+
     def search_train(self, dep, arr, date=None, time=None, train_type='05'):
         """Search trains for specific time and date.
 
@@ -245,19 +314,17 @@ class Korail(object):
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
 
-        if j['strResult'] == 'FAIL':
-            h_msg_cd  = j['h_msg_cd'].encode('utf-8')
-            h_msg_txt = j['h_msg_txt'].encode('utf-8')
-
-            raise Exception("%s (%s)" % (h_msg_txt, h_msg_cd))
-        else:
+        if self.result_check(j):
             train_infos = j['trn_infos']['trn_info']
 
             trains = []
 
             for info in train_infos:
                 for i in info:
-                    info[i] = info[i].encode('utf-8')
+                    try:
+                        info[i] = info[i].encode('utf-8')
+                    except:
+                        pass
 
                 train = Train()
                 train.train_type      = info['h_trn_clsf_cd']
@@ -265,16 +332,15 @@ class Korail(object):
                 train.train_no        = info['h_trn_no']
                 train.delay_time      = info['h_expct_dlay_hr']
 
-                train.dep_name    = info['h_dpt_rs_stn_nm']
-                train.dep_code    = info['h_dpt_rs_stn_cd']
-                train.dep_date    = info['h_dpt_dt']
-                train.dep_time_qb = info['h_dpt_tm_qb']
+                train.dep_name = info['h_dpt_rs_stn_nm']
+                train.dep_code = info['h_dpt_rs_stn_cd']
+                train.dep_date = info['h_dpt_dt']
+                train.dep_time = info['h_dpt_tm']
 
-                train.arr_name    = info['h_arv_rs_stn_nm']
-                train.arr_code    = info['h_arv_rs_stn_cd']
-                train.arr_date    = info['h_arv_dt']
-                train.arr_time    = info['h_arv_tm']
-                train.arr_time_qb = info['h_arv_tm_qb']
+                train.arr_name = info['h_arv_rs_stn_nm']
+                train.arr_code = info['h_arv_rs_stn_cd']
+                train.arr_date = info['h_arv_dt']
+                train.arr_time = info['h_arv_tm']
 
                 train.reserve_possible      = info['h_rsv_psb_flg']
                 train.reserve_possible_name = info['h_rsv_psb_nm']
@@ -285,3 +351,71 @@ class Korail(object):
                 trains.append(train)
 
             return trains
+
+    def reserve(self, train):
+        """Reserve a train.
+
+        :param train: An instance of `Train`.
+        """
+        pass
+    
+    def tickets(self):
+        """Get list of tickets"""
+        url = KORAIL_MYTICKETLIST
+        data = {
+            'Device'         : self._device,
+            'Version'        : self._version,
+            'Key'            : self._key,
+            'txtIndex'       : '1',
+            'h_page_no'      : '1',
+            'txtDeviceId'    : '',
+            'h_abrd_dt_from' : '',
+            'h_abrd_dt_to'   : '',
+        }
+
+        r = self._session.post(url, data=data)
+        j = json.loads(r.text)
+
+        if self.result_check(j):
+            ticket_infos = j['tk_infos']['tk_info']
+
+            tickets = []
+
+            for info in ticket_infos:
+                for i in info:
+                    try:
+                        info[i] = info[i].encode('utf-8')
+                    except:
+                        pass
+
+                ticket = Ticket()
+                ticket.train_type      = info['h_trn_clsf_cd']
+                ticket.train_type_name = info['h_trn_clsf_nm']
+                ticket.train_no        = info['h_trn_no']
+
+                ticket.dep_name = info['h_dpt_rs_stn_nm']
+                ticket.dep_code = info['h_dpt_rs_stn_cd']
+                ticket.dep_date = info['h_dpt_dt']
+                ticket.dep_time = info['h_dpt_tm']
+
+                ticket.arr_name = info['h_arv_rs_stn_nm']
+                ticket.arr_code = info['h_arv_rs_stn_cd']
+                ticket.arr_date = info['h_arv_dt']
+                ticket.arr_time = info['h_arv_tm']
+
+                ticket.car_no        = info['h_srcar_no']
+                ticket.seat_no       = info['h_seat_no']
+                ticket.seat_no_end   = info['h_seat_no_end']
+                ticket.seat_no_count = int(info['h_seat_cnt'])
+
+                ticket.buyer_name = info['h_buy_ps_nm']
+                ticket.sale_date  = info['h_orgtk_sale_dt']
+                ticket.sale_info1 = info['h_orgtk_wct_no']
+                ticket.sale_info2 = info['h_orgtk_ret_sale_dt']
+                ticket.sale_info3 = info['h_orgtk_sale_sqno']
+                ticket.sale_info4 = info['h_orgtk_ret_pwd']
+                ticket.price      = int(info['h_rcvd_amt'])
+
+                tickets.append(ticket)
+
+            return tickets

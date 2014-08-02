@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ndrive manual &mdash; ndrive 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ndrive 0.0.1 documentation" href="#" /> 
+  </head>
+  <body>
+  
+  
+  <div class=indexwrapper>
+  
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="ndrive-manual">
+<h1>ndrive manual<a class="headerlink" href="#ndrive-manual" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p><em>ndrive</em> is a python library that can provide an access to Naver Ndrive. This is not an official Ndrive python API, so some features may not be implemented, yet.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ndrive</span> <span class="kn">import</span> <span class="n">Ndrive</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nd</span> <span class="o">=</span> <span class="n">Ndrive</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nd</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="s">&quot;YOUR_ID&quot;</span><span class="p">,</span><span class="s">&quot;YOUR_PASSWORD&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nd</span><span class="o">.</span><span class="n">uploadFile</span><span class="p">(</span><span class="s">&quot;test.txt&quot;</span><span class="p">,</span><span class="s">&#39;/test.txt&#39;</span><span class="p">,</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Download and upload a file</li>
+<li>Get file and directory list of Ndrive directories</li>
+<li>Make a url share link for a specific directory or file</li>
+<li>Search Ndrive file and  directory</li>
+<li>Get properties of file and directory</li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>This package is available in PyPI. To install it in your system, use easy_install:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ easy_install ndrive
+</pre></div>
+</div>
+<p>Or use pip:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install ndrive
+</pre></div>
+</div>
+<p>Or check out developement version:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone git://github.com/carpedm20/ndrive.git
+</pre></div>
+</div>
+</div>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>If you want to start with Ndrive module, you need to <em>login</em> to Ndrive first. Just make a <tt class="docutils literal"><span class="pre">Ndrive</span></tt> object and use <tt class="docutils literal"><span class="pre">login</span></tt> method.</p>
+<p>Login:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">nd</span> <span class="o">=</span> <span class="n">Ndrive</span><span class="p">()</span>
+<span class="n">nd</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="s">&quot;YOUR_ID&quot;</span><span class="p">,</span><span class="s">&quot;YOUR_PASSWORD&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then you might want to <em>download</em> a file from your Ndrive, but you might don&#8217;t know exact filename in Ndrive directory. Then, you can use <tt class="docutils literal"><span class="pre">getList</span></tt> method to <em>get list</em> of files and directory of given directory.</p>
+<p><em>Don&#8217;t forget to put / in front of the Ndrive path, which indicate root directory of Ndrive</em></p>
+<p>Get file and directory List:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">nd_list</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">getList</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">nd_list</span>
+</pre></div>
+</div>
+<p>If you find a file, then you can download the file to your local directory.</p>
+<p>Download:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">nd</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s">&#39;/Picture/flower.png&#39;</span><span class="p">,</span> <span class="s">&#39;./flower.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or you can upload a file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">nd</span><span class="o">.</span><span class="n">puloadFile</span><span class="p">(</span><span class="s">&#39;./flower.png&#39;</span><span class="p">,</span><span class="s">&#39;/Picture/flower.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can make a test directory at root directory:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">nd</span><span class="o">.</span><span class="n">makeDirectory</span><span class="p">(</span><span class="s">&#39;/test&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and move a file from root to a created test directory:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">nd</span><span class="o">.</span><span class="n">doMove</span><span class="p">(</span><span class="s">&#39;/flower.png&#39;</span><span class="p">,</span><span class="s">&#39;/test/flower.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="api-documentation">
+<h2>API documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h2>
+<p>This is the information of class and method of <em>ndrive</em>.</p>
+<dl class="class">
+<dt id="korail2.Korail">
+<em class="property">class </em><tt class="descclassname">korail2.</tt><tt class="descname">Korail</tt><big>(</big><em>id</em>, <em>password</em><big>)</big><a class="headerlink" href="#korail2.Korail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Korail object</p>
+<dl class="method">
+<dt id="korail2.Korail.login">
+<tt class="descname">login</tt><big>(</big><em>id</em>, <em>password</em><big>)</big><a class="headerlink" href="#korail2.Korail.login" title="Permalink to this definition">¶</a></dt>
+<dd><p>Login to Korail server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>id</strong> &#8211; <cite>Korail membership number</cite> or <cite>phone number</cite> or <cite>email</cite>
+membership   : xxxxxxxx (8 digits) 
+phone number : xxx-xxxx-xxxx
+email        : <a class="reference external" href="mailto:xxx&#37;&#52;&#48;xxx&#46;xxx">xxx<span>&#64;</span>xxx<span>&#46;</span>xxx</a></li>
+<li><strong>password</strong> &#8211; Korail account password</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="korail2.Korail.search_train">
+<tt class="descname">search_train</tt><big>(</big><em>dep</em>, <em>arr</em>, <em>date=None</em>, <em>time=None</em>, <em>train_type='05'</em><big>)</big><a class="headerlink" href="#korail2.Korail.search_train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search trains for specific time and date.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dep</strong> &#8211; A departure station in Korean  ex) &#8216;서울&#8217;</li>
+<li><strong>arr</strong> &#8211; A arrival station in Korean  ex) &#8216;부산&#8217;</li>
+<li><strong>date</strong> &#8211; (optional) A departure date in <cite>yyyyMMdd</cite> format</li>
+<li><strong>time</strong> &#8211; (optional) A departure time in <cite>hhmmss</cite> format</li>
+<li><strong>train_type</strong> &#8211; (optional) A type of train
+- 00: KTX, KTX-산천
+- 01: 새마을호
+- 02: 무궁화호
+- 03: 통근열차
+- 04: 누리로
+- 05: 전체 (기본값)
+- 06: 공학직통
+- 07: KTX-산천
+- 08: ITX-새마을
+- 09: ITX-청춘</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="changelog">
+<h2>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="license-and-author">
+<h2>License and Author<a class="headerlink" href="#license-and-author" title="Permalink to this headline">¶</a></h2>
+<p>korail2 is opened under the BSD license. See LISENCE file for a further information.</p>
+<p>I&#8217;m <a class="reference external" href="http://carpedm20.github.io/about/">Kim Tae Hoon</a>, a student who love Python :)</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  
+    <a href="http://github.com/carpedm20/ndrive"><img style="position: fixed; top: 0; right: 0; border: 0;"
+    src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  
+
+  
+  </div>
+  
+
+  </body>
+</html>
