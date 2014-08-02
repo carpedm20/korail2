@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Korail2 -- Korail(www.letskorail.com) wrapper for Python.
-=========================================
+Korail2 -- Korail (www.letskorail.com) wrapper for Python.
+==========================================================
 
 If you're reading this code, you should know what Korail is.
 
 Just play. Have fun. Enjoy the Korail2!
-```````````````````````````
+```````````````````````````````````````
 
 ::
 
@@ -32,7 +32,7 @@ except ImportError:
     from setuptools import setup
 
 # detect the current version
-with open('line/__init__.py') as f:
+with open('korail2/__init__.py') as f:
     version = re.search(r'__version__\s*=\s*\'(.+?)\'', f.read()).group(1)
 assert version
 
@@ -46,10 +46,9 @@ setup(
     description='Korail(www.letskorail.com) wrapper for Python',
     long_description=__doc__,
     platforms='any',
-    packages=find_packages(),
     include_package_data=True,
     classifiers=[
-        'Development Status :: 0 - Beta',
+        'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
