@@ -44,7 +44,7 @@ You can search train schedules `search_train` method. `search_train` method take
 - date : (optional) A departure date in `yyyyMMdd` format
 - time : (optional) A departure time in `hhmmss` format
 - train_type: (optional) A type of train
-    - 00: KTX, KTX-산천
+    - 00: KTX
     - 01: 새마을호
     - 02: 무궁화호
     - 03: 통근열차

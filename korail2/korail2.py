@@ -25,10 +25,11 @@ KORAIL_PORT = "443"
 KORAIL_DOMAIN = "%s://%s:%s" % (SCHEME, KORAIL_HOST, KORAIL_PORT)
 KORAIL_MOBILE = "%s/classes/com.korail.mobile" % KORAIL_DOMAIN
 
-KORAIL_LOGIN            = "%s.login.Login" % KORAIL_MOBILE
-KORAIL_LOGOUT           = "%s.common.logout" % KORAIL_MOBILE
-KORAIL_SEARCH_SCHEDULE  = "%s.seatMovie.ScheduleView" % KORAIL_MOBILE
-KORAIL_MYTICKETLIST     = "%s.myTicket.MyTicketList" % KORAIL_MOBILE
+KORAIL_LOGIN             = "%s.login.Login" % KORAIL_MOBILE
+KORAIL_LOGOUT            = "%s.common.logout" % KORAIL_MOBILE
+KORAIL_SEARCH_SCHEDULE   = "%s.seatMovie.ScheduleView" % KORAIL_MOBILE
+KORAIL_TICKETRESERVATION = "%s.certification.TicketReservation" % KORAIL_MOBILE
+KORAIL_MYTICKETLIST      = "%s.myTicket.MyTicketList" % KORAIL_MOBILE
 
 KORAIL_STATION_DB       = "%s.common.stationinfo?device=ip" % KORAIL_MOBILE
 KORAIL_STATION_DB_DATA  = "%s.common.stationdata" % KORAIL_MOBILE
@@ -86,6 +87,9 @@ class Schedule(object):
 
     #: 도착 시각 (hhmmss)
     arr_time = None # h_arv_tm
+
+    #: ???? 시각 (yyyyMMdd)
+    run_date = None # h_run_dt
 
     def __repr__(self):
         dep_time = self.dep_time[:2] + ":" + self.dep_time[2:4]
@@ -150,11 +154,11 @@ class Ticket(Train):
     #: 열차 번호
     car_no = None # h_srcar_no
 
-    #: 자리 갯수
-    seat_no_count = None # h_seat_cnt  ex) 001
-
     #: 자리 번호
     seat_no = None # h_seat_no
+
+    #: 자리 갯수
+    seat_no_count = None # h_seat_cnt  ex) 001
 
     #: 자리 번호
     seat_no_end = None # h_seat_no_end
@@ -186,9 +190,9 @@ class Ticket(Train):
         repr_str += " => %s호" % self.car_no
 
         if int(self.seat_no_count) != 1:
-            repr_str += " %s~%s" % (self.seat_no, self.seat_no_end)
+            repr_str += " [%s~%s]" % (self.seat_no, self.seat_no_end)
         else:
-            repr_str += " %s" % self.seat_no
+            repr_str += " [%s]" % self.seat_no
 
         repr_str += ", %s원" % self.price
 
@@ -200,6 +204,34 @@ class Ticket(Train):
                                 sale_info3,
                                 sale_info4)
 
+
+class Seat(Schedule):
+    """Ticket object"""
+    #: Schedule
+    schedule = None
+
+    #: 열차 번호
+    car_no = None # h_srcar_no
+
+    #: 자리 번호
+    seat_no = None # h_seat_no
+
+    #: 자리 갯수
+    seat_no_count = None # h_seat_cnt  ex) 001
+
+    def __repr__(self):
+        repr_str = self.schedule.__repr__()
+        repr_str += "%s호 [%s]" % (self.car_no, self.seat_no)
+
+        return repr_str
+
+    def get_ticket_no(self):
+        return "%s-%s-%s-%s" % (sale_info1,
+                                sale_info2,
+                                sale_info3,
+                                sale_info4)
+
+
 class Korail(object):
     """Korail object"""
     _session = requests.session()
@@ -207,6 +239,10 @@ class Korail(object):
     _device  = 'AD'
     _version = '130607001'
     _key     = 'korail1234567890'
+
+    membership_number = None
+    name = None
+    email = None
 
     def __init__(self, id, password):
         self.id = id
@@ -246,15 +282,25 @@ class Korail(object):
         j = json.loads(r.text)
 
         if j['strResult'] == 'SUCC':
-            return True
+            self._key = j['Key']
 
-        return False
+            self.membership_number = j['strMbCrdNo']
+            self.name = j['strCustNm']
+            self.email = j['strEmailAdr']
+
+            return True
+        else:
+            return False
 
     def logout(self):
+        """Logout from Korail server"""
         url = KORAIL_LOGOUT
         self._session.get(url)
 
-    def result_check(self, j):
+    def _result_check(self, j):
+        """Result data check"""
+        print j['h_msg_txt']
+
         if j['strResult'] == 'FAIL':
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')
             h_msg_txt = j['h_msg_txt'].encode('utf-8')
@@ -316,17 +362,15 @@ class Korail(object):
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
 
-        if self.result_check(j):
+        if self._result_check(j):
             train_infos = j['trn_infos']['trn_info']
 
             trains = []
 
             for info in train_infos:
                 for i in info:
-                    try:
-                        info[i] = info[i].encode('utf-8')
-                    except:
-                        pass
+                    try: info[i] = info[i].encode('utf-8')
+                    except: pass
 
                 train = Train()
                 train.train_type      = info['h_trn_clsf_cd']
@@ -344,6 +388,8 @@ class Korail(object):
                 train.arr_date = info['h_arv_dt']
                 train.arr_time = info['h_arv_tm']
 
+                train.run_date = info['h_run_dt']
+
                 train.reserve_possible      = info['h_rsv_psb_flg']
                 train.reserve_possible_name = info['h_rsv_psb_nm']
 
@@ -359,7 +405,98 @@ class Korail(object):
 
         :param train: An instance of `Train`.
         """
-        pass
+        url = KORAIL_TICKETRESERVATION
+        data = {
+            'Device'         : self._device,
+            'Version'        : self._version,
+            'Key'            : self._key,
+            'txtGdNo'        : '',
+            'txtTotPsgCnt'   : '',
+            'txtSeatAttCd1'  : '00',
+            'txtSeatAttCd2'  : '00',
+            'txtSeatAttCd3'  : '00',
+            'txtSeatAttCd4'  : '15',
+            'txtSeatAttCd5'  : '00',
+            'hidFreeFlg'     : '',
+            'txtStndFlg'     : '',
+            'txtMenuId'      : '11',
+            'txtSrcarCnt'    : '0',
+            'txtJrnyCnt'     : '1',
+            'txtPsgTpCd1'    : '1',
+            'txtDiscKndCd1'  : '000',
+            'txtCompaCnt1'   : '1',
+            'txtCardCode_1'  : '',
+            'txtCardNo_1'    : '',
+            'txtCardPw_1'    : '',
+            'txtJrnySqno1'   : '001',
+            'txtJrnyTpCd1'   : '11',
+            'txtDptDt1'      : train.dep_date,
+            'txtDptRsStnCd1' : train.dep_code,
+            'txtDptTm1'      : train.dep_time,
+            'txtArvRsStnCd1' : train.arr_code,
+            'txtTrnNo1'      : train.train_no,
+            'txtRunDt1'      : train.run_date,
+            'txtTrnClsfCd1'  : train.train_type,
+            'txtPsrmClCd1'   : '1',
+            'txtChgFlg1'     : '',
+            'txtJrnySqno2'   : '',
+            'txtJrnyTpCd2'   : '',
+            'txtDptDt2'      : '',
+            'txtDptRsStnCd2' : '',
+            'txtDptTm2'      : '',
+            'txtArvRsStnCd2' : '',
+            'txtTrnNo2'      : '',
+            'txtRunDt2'      : '',
+            'txtTrnClsfCd2'  : '',
+            'txtPsrmClCd2'   : '',
+            'txtChgFlg2'     : '',
+        }
+
+        r = self._session.post(url, data=data)
+        j = json.loads(r.text)
+
+        if self._result_check(j):
+            journey_infos = j['jrny_infos']['jrny_info']
+
+            seats = []
+
+            for info in journey_infos:
+                for i in info:
+                    try: info[i] = info[i].encode('utf-8')
+                    except: pass
+
+                schedule = Schedule()
+
+                schedule.train_type      = info['h_trn_clsf_cd']
+                schedule.train_type_name = info['h_trn_clsf_nm']
+                schedule.train_no        = info['h_trn_no']
+
+                schedule.dep_name = info['h_dpt_rs_stn_nm']
+                schedule.dep_code = info['h_dpt_rs_stn_cd']
+                schedule.dep_date = info['h_dpt_dt']
+                schedule.dep_time = info['h_dpt_tm']
+
+                schedule.arr_name = info['h_arv_rs_stn_nm']
+                schedule.arr_code = info['h_arv_rs_stn_cd']
+                schedule.arr_date = ''
+                schedule.arr_time = ''
+
+                seat_infos = info['seat_infos']['seat_info']
+
+                for s_info in seat_infos:
+                    for i in s_info:
+                        try: s_info[i] = s_info[i].encode('utf-8')
+                        except: pass
+                    seat = Seat()
+
+                    seat.schedule      = schedule
+                    seat.car_no        = s_info['h_srcar_no']
+                    seat.seat_no       = s_info['h_seat_no']
+                    seat.seat_no_count = s_info['h_cont_seat_cnt']
+
+                    seats.append(seat)
+
+            return seats
     
     def tickets(self):
         """Get list of tickets"""
@@ -378,17 +515,15 @@ class Korail(object):
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
 
-        if self.result_check(j):
+        if self._result_check(j):
             ticket_infos = j['tk_infos']['tk_info']
 
             tickets = []
 
             for info in ticket_infos:
                 for i in info:
-                    try:
-                        info[i] = info[i].encode('utf-8')
-                    except:
-                        pass
+                    try: info[i] = info[i].encode('utf-8')
+                    except: pass
 
                 ticket = Ticket()
                 ticket.train_type      = info['h_trn_clsf_cd']
