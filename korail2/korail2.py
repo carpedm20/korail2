@@ -92,12 +92,15 @@ class Schedule(object):
     run_date = None # h_run_dt
 
     def __repr__(self):
-        dep_time = self.dep_time[:2] + ":" + self.dep_time[2:4]
-        arr_time = self.arr_time[:2] + ":" + self.arr_time[2:4]
+        dep_time = "%s:%s" % (self.dep_time[:2], self.dep_time[2:4])
+        arr_time = "%s:%s" % (self.arr_time[:2], self.arr_time[2:4])
 
-        repr_str = '[%s #%s] %s~%s(%s~%s)' % (
+        dep_date = "%s월 %s일" % (int(self.dep_date[4:6]),
+                                  int(self.dep_date[6:]))
+
+        repr_str = '[%s] %s, %s~%s(%s~%s)' % (
             self.train_type_name,
-            self.train_no,
+            dep_date,
             self.dep_name,
             self.arr_name,
             dep_time,
@@ -130,7 +133,7 @@ class Train(Schedule):
     general_seat = False # h_gen_rsv_cd
 
     def __repr__(self):
-        repr_str = super(Train, self).__repr__()
+        repr_str = super(Train, self).__repr__() + " "
 
         if self.special_seat != '00':
             if  self.special_seat == '11':
