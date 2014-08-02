@@ -11,16 +11,16 @@ Installing
 
 1. using pip:
 
-    $ pip install line
+    $ pip install korail2
 
 1. using easy_install:
 
-    $ easy_install line
+    $ easy_install korail2
 
 1. using git
 
-    $ git clone git://github.com/carpedm20/line.git
-    $ cd line
+    $ git clone git://github.com/carpedm20/korail2.git
+    $ cd korail2
     $ python setup.py install
 
 Using

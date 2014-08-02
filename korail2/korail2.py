@@ -20,13 +20,14 @@ KORAIL_HOST = "smart.letskorail.com"
 KORAIL_PORT = "443"
 
 KORAIL_DOMAIN = "%s://%s:%s" % (SCHEME, KORAIL_HOST, KORAIL_PORT)
-KORAIL_COMMON = "%s/classes/com.korail.mobile.common" % KORAIL_DOMAIN
-KORAIL_LOGIN  = "%s/classes/com.korail.mobile.login.Login" % KORAIL_DOMAIN
+KORAIL_MOBILE = "%s/classes/com.korail.mobile" % KORAIL_DOMAIN
 
-KORAIL_LOGOUT           = "%s.logout" % KORAIL_COMMON
-KORAIL_STATION_DB       = "%s.stationinfo?device=ip" % KORAIL_COMMON
-KORAIL_STATION_DB_DATA  = "%s.stationdata" % KORAIL_COMMON
-KORAIL_EVENT            = "%s.event" % KORAIL_COMMON
+KORAIL_LOGIN            = "%s.login.Login" % KORAIL_MOBILE
+KORAIL_LOGOUT           = "%s.common.logout" % KORAIL_MOBILE
+KORAIL_STATION_DB       = "%s.common.stationinfo?device=ip" % KORAIL_MOBILE
+KORAIL_STATION_DB_DATA  = "%s.common.stationdata" % KORAIL_MOBILE
+KORAIL_EVENT            = "%s.common.event" % KORAIL_MOBILE
+KORAIL_SEARCH_SCHEDULE  = "%s.seatMovie.ScheduleView" % KORAIL_MOBILE
 KORAIL_PAYMENT          = "%s/ebizmw/PrdPkgMainList.do" % KORAIL_DOMAIN
 KORAIL_PAYMENT_VOUNCHER = "%s/ebizmw/PrdPkgBoucherView.do" % KORAIL_DOMAIN
 
@@ -39,7 +40,9 @@ class Korail(object):
         self.id = id
         self.password = password
 
-    def _login(self, id, password):
+        self.login(id, password)
+
+    def login(self, id, password):
         """Login to Korail server.
 
         :param id: `Korail membership number` or `phone number` or `email`
@@ -74,3 +77,9 @@ class Korail(object):
             return True
 
         return False
+
+    def logout(self):
+        url = KORAIL_LOGOUT
+        self._session.get(url)
+
+
