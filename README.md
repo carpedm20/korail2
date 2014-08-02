@@ -11,11 +11,9 @@ Installing
 
 1. using pip:
     $ pip install korail2
-
-1. using easy_install:
+2. using easy_install:
     $ easy_install korail2
-
-1. using git
+3. using git
     $ git clone git://github.com/carpedm20/korail2.git
     $ cd korail2
     $ python setup.py install
