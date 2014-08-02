@@ -9,7 +9,7 @@
 
 import re
 import requests
-from urllib import quote
+from datetime import datetime
 try:
     import simplejson as json
 except ImportError:
@@ -50,43 +50,92 @@ class Train(object):
     #: 05: 전체 (검색시에만 사용)
     #: 06: 공학직통
     #: 07: KTX-산천
+    #: 08: ITX-새마을
     #: 09: ITX-청춘
-    train_type = None
+    train_type = None # h_trn_clsf_cd, selGoTrain
+
+    #: 기차 종류 이름
+    train_type_name = None # h_trn_clsf_nm
+
+    #: 기차 번호
+    train_no = None # h_trn_no
+
+    #: 지연 시간 (hhmm)
+    delay_time = None # h_expct_dlay_hr
+
+    #: 출발역 이름
+    dep_name = None # h_dpt_rs_stn_nm
 
     #: 출발역 코드
-    dep_code = None
+    dep_code = None # h_dpt_rs_stn_cd
 
     #: 출발날짜 (yyyyMMdd)
-    dep_date = None
+    dep_date = None # h_dpt_dt
 
-    #: 출발시각 (hhmmss)
-    dep_time = None
+    #: 출발 시각1 (hhmmss)
+    dep_time = None # h_dpt_tm
+
+    #: 출발 시각2 (hh:mm)
+    dep_time_qb = None # h_dpt_tm_qb
+
+    #: 도착역 이름
+    arr_name = None # h_arv_rs_stn_nm
 
     #: 도착역 코드
-    arr_code = None
+    arr_code = None # h_arv_rs_stn_cd
 
-    #: 도착 시각
-    arr_time = None
+    #: 도착날짜 (yyyyMMdd)
+    dep_date = None # h_arv_dt
 
-    #: 인원
-    count = 0
+    #: 도착 시각1 (hhmmss)
+    arr_time = None # h_arv_tm
+
+    #: 도착 시각2 (hh:mm)
+    arr_time_qb = None # h_arv_tm_qb
+
+    #: 예약 가능 여부
+    reserve_possible = False # h_rsv_psb_flg ('Y' or 'N')
+
+    #: 예약 가능 여부
+    reserve_possible_name = None # h_rsv_psb_nm
 
     #: 특실 예약가능 여부
-    first_class = False
+    #: 00: 특실 없음
+    #: 11: 예약 가능
+    #: 13: 매진
+    special_seat = False # h_spe_rsv_cd
 
     #: 일반실 예약가능 여부
-    general_admission = False
+    #: 00: 일반실 없음
+    #: 11: 예약 가능
+    #: 13: 매진
+    general_seat = False # h_gen_rsv_cd
 
     def __repr__(self):
-        return '[%s] %s~%s(%s~%s) [특실:%d][일반실:%d]' % (
-            self.train_type.encode('utf-8'),
-            self.dep_code.encode('utf-8'),
-            self.dep_time.encode('utf-8'),
-            self.arr_code.encode('utf-8'),
-            self.arr_time.encode('utf-8'),
-            self.first_class,
-            self.general_admission,
+        repr_str = '[%s #%s] %s~%s(%s~%s) ' % (
+            self.train_type_name,
+            self.train_no,
+            self.dep_name,
+            self.arr_name,
+            self.dep_time_qb,
+            self.arr_time_qb,
         )
+
+        if self.special_seat != '00':
+            if  self.special_seat == '11':
+                special_seat = True
+            else:
+                special_seat = False
+            repr_str += '[특실:%d]' % special_seat
+
+        if self.general_seat != '00':
+            if  self.general_seat == '11':
+                general_seat = True
+            else:
+                general_seat = False
+            repr_str += '[일반실:%d]' % general_seat
+
+        return repr_str + " " + self.reserve_possible_name.replace('\n',' ')
 
 
 class Korail(object):
@@ -143,14 +192,14 @@ class Korail(object):
         url = KORAIL_LOGOUT
         self._session.get(url)
 
-    def search_trian(self, start, end, date, time, train_type='05'):
+    def search_trian(self, dep, arr, date=None, time=None, train_type='05'):
         """Search trains for specific time and date.
 
-        :param start: A departure station  ex) 서울
-        :param end: A arrival station  ex) 부산
-        :param date: A departure date in `yyyyMMdd` format
-        :param time: A departure time in `hhmmss` format
-        :param train_type: A type of train
+        :param dep: A departure station in Korean  ex) '서울'
+        :param arr: A arrival station in Korean  ex) '부산'
+        :param date: (optional) A departure date in `yyyyMMdd` format
+        :param time: (optional) A departure time in `hhmmss` format
+        :param train_type: (optional) A type of train
                            - 00: KTX, KTX-산천
                            - 01: 새마을호
                            - 02: 무궁화호
@@ -158,18 +207,26 @@ class Korail(object):
                            - 04: 누리로
                            - 05: 전체 (기본값)
                            - 06: 공학직통
+                           - 07: KTX-산천
+                           - 08: ITX-새마을
                            - 09: ITX-청춘
         """
+        if date == None:
+            date = datetime.now().strftime("%Y%m%d")
+        if time == None:
+            time = datetime.now().strftime("%H%M%S")
+
         url  = KORAIL_SEARCH_SCHEDULE
         data = {
+            'Device'         : self._device,
             'Version'        : self._version,
             'Key'            : self._key,
             'radJobId'       : '1',
             'txtMenuId'      : '11',
             'selGoTrain'     : train_type,
             'txtGoAbrdDt'    : date, #'20140803',
-            'txtGoStart'     : quote(start),
-            'txtGoEnd'       : quote(end),
+            'txtGoStart'     : dep,
+            'txtGoEnd'       : arr,
             'txtGoHour'      : time, #'071500',
             'txtPsgFlg_1'    : '1',
             'txtPsgFlg_2'    : '0',
@@ -184,7 +241,7 @@ class Korail(object):
             'h_pwd'          : '',
             'txtJobDv'       : ''
         }
-        print data
+
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
 
@@ -193,4 +250,38 @@ class Korail(object):
             h_msg_txt = j['h_msg_txt'].encode('utf-8')
 
             raise Exception("%s (%s)" % (h_msg_txt, h_msg_cd))
-        return j
+        else:
+            train_infos = j['trn_infos']['trn_info']
+
+            trains = []
+
+            for info in train_infos:
+                for i in info:
+                    info[i] = info[i].encode('utf-8')
+
+                train = Train()
+                train.train_type      = info['h_trn_clsf_cd']
+                train.train_type_name = info['h_trn_clsf_nm']
+                train.train_no        = info['h_trn_no']
+                train.delay_time      = info['h_expct_dlay_hr']
+
+                train.dep_name    = info['h_dpt_rs_stn_nm']
+                train.dep_code    = info['h_dpt_rs_stn_cd']
+                train.dep_date    = info['h_dpt_dt']
+                train.dep_time_qb = info['h_dpt_tm_qb']
+
+                train.arr_name    = info['h_arv_rs_stn_nm']
+                train.arr_code    = info['h_arv_rs_stn_cd']
+                train.arr_date    = info['h_arv_dt']
+                train.arr_time    = info['h_arv_tm']
+                train.arr_time_qb = info['h_arv_tm_qb']
+
+                train.reserve_possible      = info['h_rsv_psb_flg']
+                train.reserve_possible_name = info['h_rsv_psb_nm']
+
+                train.special_seat = info['h_spe_rsv_cd']
+                train.general_seat = info['h_gen_rsv_cd']
+
+                trains.append(train)
+
+            return trains
