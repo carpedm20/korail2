@@ -3,7 +3,7 @@ Korail2
 
 Korail (www.letskorail.com) wrapper for Python.
 
-Code structure is inspired by [korail](https://github.com/devxoul/korail) of [devxoul](http://xoul.kr)
+This project was inspired from [korail](https://github.com/devxoul/korail) of [devxoul](https://github.com/devxoul)
 
 
 Installing
