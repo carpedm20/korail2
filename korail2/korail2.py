@@ -192,7 +192,7 @@ class Korail(object):
         url = KORAIL_LOGOUT
         self._session.get(url)
 
-    def search_trian(self, dep, arr, date=None, time=None, train_type='05'):
+    def search_train(self, dep, arr, date=None, time=None, train_type='05'):
         """Search trains for specific time and date.
 
         :param dep: A departure station in Korean  ex) '서울'

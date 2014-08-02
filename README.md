@@ -10,15 +10,12 @@ Installing
 ----------
 
 1. using pip:
-
     $ pip install korail2
 
 1. using easy_install:
-
     $ easy_install korail2
 
 1. using git
-
     $ git clone git://github.com/carpedm20/korail2.git
     $ cd korail2
     $ python setup.py install
@@ -62,7 +59,7 @@ Below is a sample code of `search_train`:
     arr = '동대구'
     date = '20140815'
     time = '144000'
-    trains = korail.serach_train(dep, arr, date, time)
+    trains = korail.search_train(dep, arr, date, time)
 
 
 License
