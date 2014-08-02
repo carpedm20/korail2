@@ -97,6 +97,6 @@ License and Author
 
 korail2 is opened under the BSD license. See LISENCE file for a further information.
 
-I'm `Kim Tae Hoon`_, a student who love Python :)
+I'm `Kim Tae Hoon`_, a student who loves Python :)
 
 .. _Kim Tae Hoon: http://carpedm20.github.io/about/
