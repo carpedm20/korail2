@@ -38,15 +38,15 @@ assert version
 
 setup(
     name='korail2',
+    packages=['korail2'],
     version=version,
-    license='BSD',
+    description='Korail(www.letskorail.com) wrapper for Python',
+    long_description=open('README.rst').read(),
+    license='BSD License',
     author='Taehoon Kim',
     author_email='carpedm20@gmail.com',
-    url='http://pythonhosted.org/korail2',
-    description='Korail(www.letskorail.com) wrapper for Python',
-    long_description=__doc__,
-    platforms='any',
-    include_package_data=True,
+    url='http://github.com/carpedm20/korail2',
+    keywords=['Korail'],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
@@ -66,5 +66,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
-    install_requires=['setuptools'],
+    install_requires=[
+        'requests'
+    ],
 )
