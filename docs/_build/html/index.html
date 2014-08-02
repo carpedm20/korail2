@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>korail2 manual &mdash; ndrive 0.0.1 documentation</title>
+    <title>Korail2 &mdash; ndrive 0.0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/flasky.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -37,15 +37,14 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="korail2-manual">
-<h1>korail2 manual<a class="headerlink" href="#korail2-manual" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="korail2">
+<h1>Korail2<a class="headerlink" href="#korail2" title="Permalink to this headline">¶</a></h1>
 <p>Korail (www.letskorail.com) wrapper for Python.</p>
 <p>This project was inspired from
 <a class="reference external" href="https://github.com/devxoul/korail">korail</a> of
-<a class="reference external" href="https://github.com/devxoul">devxoul</a></p>
-</div>
+<a class="reference external" href="https://github.com/devxoul">devxoul</a>.</p>
+<p><a class="reference external" href="https://github.com/devxoul/korail">korail</a> is not working anymore
+becuase of a huge change in Korail API.</p>
 <div class="section" id="installing">
 <h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
 <p>To install korail2, simply:</p>
@@ -140,101 +139,13 @@ method takes these arguments:</p>
 </div>
 </div>
 </div>
-<div class="section" id="api-documentation">
-<h2>API documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h2>
-<p>This is the information of class and method of <em>Korail</em>.</p>
-<dl class="class">
-<dt id="korail2.Korail">
-<em class="property">class </em><tt class="descclassname">korail2.</tt><tt class="descname">Korail</tt><big>(</big><em>id</em>, <em>password</em><big>)</big><a class="headerlink" href="#korail2.Korail" title="Permalink to this definition">¶</a></dt>
-<dd><p>Korail object</p>
-<dl class="method">
-<dt id="korail2.Korail.login">
-<tt class="descname">login</tt><big>(</big><em>id</em>, <em>password</em><big>)</big><a class="headerlink" href="#korail2.Korail.login" title="Permalink to this definition">¶</a></dt>
-<dd><p>Login to Korail server.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>id</strong> &#8211; <cite>Korail membership number</cite> or <cite>phone number</cite> or <cite>email</cite>
-membership   : xxxxxxxx (8 digits) 
-phone number : xxx-xxxx-xxxx
-email        : <a class="reference external" href="mailto:xxx&#37;&#52;&#48;xxx&#46;xxx">xxx<span>&#64;</span>xxx<span>&#46;</span>xxx</a></li>
-<li><strong>password</strong> &#8211; Korail account password</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="korail2.Korail.logout">
-<tt class="descname">logout</tt><big>(</big><big>)</big><a class="headerlink" href="#korail2.Korail.logout" title="Permalink to this definition">¶</a></dt>
-<dd><p>Logout from Korail server</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="korail2.Korail.reserve">
-<tt class="descname">reserve</tt><big>(</big><em>train</em><big>)</big><a class="headerlink" href="#korail2.Korail.reserve" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reserve a train.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>train</strong> &#8211; An instance of <cite>Train</cite>.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="korail2.Korail.search_train">
-<tt class="descname">search_train</tt><big>(</big><em>dep</em>, <em>arr</em>, <em>date=None</em>, <em>time=None</em>, <em>train_type='05'</em><big>)</big><a class="headerlink" href="#korail2.Korail.search_train" title="Permalink to this definition">¶</a></dt>
-<dd><p>Search trains for specific time and date.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dep</strong> &#8211; A departure station in Korean  ex) &#8216;서울&#8217;</li>
-<li><strong>arr</strong> &#8211; A arrival station in Korean  ex) &#8216;부산&#8217;</li>
-<li><strong>date</strong> &#8211; (optional) A departure date in <cite>yyyyMMdd</cite> format</li>
-<li><strong>time</strong> &#8211; (optional) A departure time in <cite>hhmmss</cite> format</li>
-<li><strong>train_type</strong> &#8211; (optional) A type of train
-- 00: KTX, KTX-산천
-- 01: 새마을호
-- 02: 무궁화호
-- 03: 통근열차
-- 04: 누리로
-- 05: 전체 (기본값)
-- 06: 공학직통
-- 07: KTX-산천
-- 08: ITX-새마을
-- 09: ITX-청춘</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="korail2.Korail.tickets">
-<tt class="descname">tickets</tt><big>(</big><big>)</big><a class="headerlink" href="#korail2.Korail.tickets" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get list of tickets</p>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>Source codes are distributed under BSD license.</p>
 </div>
-<div class="section" id="changelog">
-<h2>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="license-and-author">
-<h2>License and Author<a class="headerlink" href="#license-and-author" title="Permalink to this headline">¶</a></h2>
-<p>korail2 is opened under the BSD license. See LISENCE file for a further information.</p>
-<p>I&#8217;m <a class="reference external" href="http://carpedm20.github.io/about/">Kim Tae Hoon</a>, a student who loves Python :)</p>
+<div class="section" id="author">
+<h2>Author<a class="headerlink" href="#author" title="Permalink to this headline">¶</a></h2>
+<p>Taehoon Kim / <a class="reference external" href="http://carpedm20.github.io/about/">&#64;carpedm20</a></p>
 </div>
 </div>
 

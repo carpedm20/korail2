@@ -1,15 +1,14 @@
-korail2 manual
-==============
-
-Introduction
-------------
+Korail2
+=======
 
 Korail (www.letskorail.com) wrapper for Python.
 
 This project was inspired from
 `korail <https://github.com/devxoul/korail>`_ of
-`devxoul <https://github.com/devxoul>`_
+`devxoul <https://github.com/devxoul>`_.
 
+`korail <https://github.com/devxoul/korail>`_ is not working anymore
+becuase of a huge change in Korail API.
 
 Installing
 ----------
@@ -118,28 +117,12 @@ You can get your tickes with ``tickets`` method.
     >>> tickets
     [[KTX] 8월 10일, 동대구~울산(09:26~09:54) => 5호 4A, 13900원]
 
+License
+-------
 
+Source codes are distributed under BSD license.
 
-API documentation
------------------
+Author
+------
 
-This is the information of class and method of *Korail*.
-
-.. autoclass:: korail2.Korail
-    :members:
-
-
-Changelog
----------
-
-.. include:: ../changelog.rst
-
-
-License and Author
-------------------
-
-korail2 is opened under the BSD license. See LISENCE file for a further information.
-
-I'm `Kim Tae Hoon`_, a student who loves Python :)
-
-.. _Kim Tae Hoon: http://carpedm20.github.io/about/
+Taehoon Kim / `@carpedm20 <http://carpedm20.github.io/about/>`_
