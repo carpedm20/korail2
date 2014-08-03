@@ -29,6 +29,7 @@ KORAIL_LOGIN             = "%s.login.Login" % KORAIL_MOBILE
 KORAIL_LOGOUT            = "%s.common.logout" % KORAIL_MOBILE
 KORAIL_SEARCH_SCHEDULE   = "%s.seatMovie.ScheduleView" % KORAIL_MOBILE
 KORAIL_TICKETRESERVATION = "%s.certification.TicketReservation" % KORAIL_MOBILE
+KORAIL_REFUND            = "%s.refunds.RefundsRequest" % KORAIL_MOBILE
 KORAIL_MYTICKETLIST      = "%s.myTicket.MyTicketList" % KORAIL_MOBILE
 
 KORAIL_STATION_DB       = "%s.common.stationinfo?device=ip" % KORAIL_MOBILE

@@ -45,7 +45,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'ndrive'
+project = u'korail2'
 copyright = u'2014, Kim Tae Hoon'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -130,7 +130,7 @@ html_theme_path = ['_themes']
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -179,7 +179,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ndrivedoc'
+htmlhelp_basename = 'korail2doc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -199,7 +199,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'ndrive.tex', u'ndrive Documentation',
+  ('index', 'korail2.tex', u'korail2 Documentation',
    u'Kim Tae Hoon', 'manual'),
 ]
 
@@ -229,7 +229,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'ndrive', u'ndrive Documentation',
+    ('index', 'korail2', u'korail2 Documentation',
      [u'Kim Tae Hoon'], 1)
 ]
 
@@ -243,8 +243,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'ndrive', u'ndrive Documentation',
-   u'Kim Tae Hoon', 'ndrive', 'One line description of project.',
+  ('index', 'korail2', u'korail2 Documentation',
+   u'Kim Tae Hoon', 'korail2', 'Korail (www.letskorail.com) wrapper for Python.',
    'Miscellaneous'),
 ]
 

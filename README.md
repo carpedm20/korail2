@@ -96,6 +96,19 @@ You can get your tickes with `tickets` method.
     [[KTX] 8월 10일, 동대구~울산(09:26~09:54) => 5호 4A, 13900원]
 
 
+How do I get Korail API
+-----------------------
+
+1. Extract Korail apk from mobile phone
+2. Decompile apk using [dex2jar](https://code.google.com/p/dex2jar/)
+3. Read a jar code using [jdgui](http://jd.benow.ca/)
+4. Edit a smail code
+5. Recompile a new Korail apk using [apktool](https://code.google.com/p/android-apktool/)
+6. Key sining with anything you want
+7. Run a edited Korail apk
+8. Packet capture and analyze the protocol
+
+
 License
 -------
 
