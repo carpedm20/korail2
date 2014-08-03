@@ -123,12 +123,12 @@ How do I get Korail API
 1. Extract Korail apk from mobile phone
 2. Decompile apk using `dex2jar <https://code.google.com/p/dex2jar/>`_
 3. Read a jar code using `jdgui <http://jd.benow.ca/>`_
-4. Edit a smail code
+4. Edit a smaili code
 5. Recompile a new Korail apk using
    `apktool <https://code.google.com/p/android-apktool/>`_
-6. Key sining with anything you want
-7. Run a edited Korail apk
-8. Packet capture and analyze the protocol
+6. Key signing with ``motizen-sign``
+7. Upload and run a new Korail apk
+8. Capture packets and analyze the API
 
 License
 -------
