@@ -8,6 +8,12 @@ This project was inspired from [korail](https://github.com/devxoul/korail) of [d
 [korail](https://github.com/devxoul/korail) is not working anymore becuase of a huge change in Korail API.
 
 
+Documentation
+-------------
+
+The documentation is available at [here](http://carpedm20.github.io/korail2/)
+
+
 Installing
 ----------
 
