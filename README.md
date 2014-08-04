@@ -1,6 +1,9 @@
 Korail2
 =======
 
+[![PyPi version](https://pypip.in/v/korail2/badge.png)](https://crate.io/packages/korail2/)
+[![PyPi downloads](https://pypip.in/d/korail2/badge.png)](https://crate.io/packages/korail2/)
+
 Korail (www.letskorail.com) wrapper for Python.
 
 This project was inspired from [korail](https://github.com/devxoul/korail) of [devxoul](https://github.com/devxoul).
