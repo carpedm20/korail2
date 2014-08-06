@@ -95,9 +95,9 @@ You can get your tickes with `tickets` method.
     >>> seat
     [KTX] 8월 3일, 서울~부산(11:00~:) 16호 6A
 
-### 4. Get tickets###
+### 4. Get tickets already paid ###
 
-You can get your tickes with `tickets` method.
+You can get the list of paid tickes with `tickets` method.
 
     >>> tickets = korail.tickets()
     정상발매처리,정상발권처리
