@@ -1,14 +1,22 @@
 Korail2
 =======
 
+|PyPi version| |PyPi downloads|
+
 Korail (www.letskorail.com) wrapper for Python.
 
 This project was inspired from
-`korail <https://github.com/devxoul/korail>`_ of
-`devxoul <https://github.com/devxoul>`_.
+`korail <https://github.com/devxoul/korail>`__ of
+`devxoul <https://github.com/devxoul>`__.
 
-`korail <https://github.com/devxoul/korail>`_ is not working anymore
+`korail <https://github.com/devxoul/korail>`__ is not working anymore
 becuase of a huge change in Korail API.
+
+Documentation
+-------------
+
+The documentation is available at
+`here <http://carpedm20.github.io/korail2/>`__
 
 Installing
 ----------
@@ -121,11 +129,11 @@ How do I get the Korail API
 ---------------------------
 
 1. Extract Korail apk from mobile phone
-2. Decompile apk using `dex2jar <https://code.google.com/p/dex2jar/>`_
-3. Read a jar code using `jdgui <http://jd.benow.ca/>`_
+2. Decompile apk using `dex2jar <https://code.google.com/p/dex2jar/>`__
+3. Read a jar code using `jdgui <http://jd.benow.ca/>`__
 4. Edit a smaili code
 5. Recompile a new Korail apk using
-   `apktool <https://code.google.com/p/android-apktool/>`_
+   `apktool <https://code.google.com/p/android-apktool/>`__
 6. Key signing with ``motizen-sign``
 7. Upload and run a new Korail apk
 8. Capture packets and analyze the API
@@ -138,4 +146,9 @@ Source codes are distributed under BSD license.
 Author
 ------
 
-Taehoon Kim / `@carpedm20 <http://carpedm20.github.io/about/>`_
+Taehoon Kim / [@carpedm20](http://carpedm20.github.io/about/)
+
+.. |PyPi version| image:: https://pypip.in/v/korail2/badge.png
+   :target: https://crate.io/packages/korail2/
+.. |PyPi downloads| image:: https://pypip.in/d/korail2/badge.png
+   :target: https://crate.io/packages/korail2/

@@ -99,9 +99,9 @@ You can get your tickes with `tickets` method.
 
 You can get your tickes with `tickets` method.
 
-    >>> tickets = k.tickets()
+    >>> tickets = korail.tickets()
     정상발매처리,정상발권처리
-    >>> tickets
+    >>> print tickets
     [[KTX] 8월 10일, 동대구~울산(09:26~09:54) => 5호 4A, 13900원]
 
 
