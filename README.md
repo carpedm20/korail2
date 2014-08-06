@@ -118,6 +118,15 @@ How do I get the Korail API
 8. Capture packets and analyze the API
 
 
+Todo
+----
+
+1. Distinguish adult and child
+2. Make an option to select special seat or general seat when reserving
+3. Make an option to reserve multiple seats at a time
+4. Implement payment API
+
+
 License
 -------
 
