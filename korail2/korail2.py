@@ -241,7 +241,7 @@ class Korail(object):
     _session = requests.session()
 
     _device  = 'AD'
-    _version = '130607001'
+    _version = '132607001'
     _key     = 'korail1234567890'
 
     membership_number = None
