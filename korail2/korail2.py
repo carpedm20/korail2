@@ -308,7 +308,7 @@ class Korail(object):
         if j['strResult'] == 'FAIL':
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')
             h_msg_txt = j['h_msg_txt'].encode('utf-8')
-
+            # P058 : 로그인 필요
             raise Exception("%s (%s)" % (h_msg_txt, h_msg_cd))
         else:
             return True
@@ -349,7 +349,7 @@ class Korail(object):
             'txtGoStart'     : dep,
             'txtGoEnd'       : arr,
             'txtGoHour'      : time, #'071500',
-            'txtPsgFlg_1'    : '1',
+            'txtPsgFlg_1'    : '1',  #일반인 1명
             'txtPsgFlg_2'    : '0',
             'txtPsgFlg_3'    : '0',
             'txtPsgFlg_4'    : '0',
