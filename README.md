@@ -1,8 +1,8 @@
 Korail2
 =======
 
-[![PyPi version](https://pypip.in/v/korail2/badge.png)](https://crate.io/packages/korail2/)
-[![PyPi downloads](https://pypip.in/d/korail2/badge.png)](https://crate.io/packages/korail2/)
+[![PyPi version](https://pypip.in/v/korail2/badge.png)](https://pypi.python.org/pypi/korail2)
+[![PyPi downloads](https://pypip.in/d/korail2/badge.png)](https://pypi.python.org/pypi/korail2)
 
 - **2014.08.11 ANNOUNCEMENT** : *Good* news! this library is working again right now! Thanks for [hyeshik](https://github.com/hyeshik)
 
