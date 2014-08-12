@@ -5,7 +5,6 @@ Korail2
 [![PyPi downloads](https://pypip.in/d/korail2/badge.png)](https://crate.io/packages/korail2/)
 
 - **2014.08.11 ANNOUNCEMENT** : *Good* news! this library is working again right now! Thanks for [hyeshik](https://github.com/hyeshik)
-- 2014.08.07 ANNOUNCEMENT : *Bad* news.. this library is not working right now... I have to check which part of API is changed ASAP :(
 
 Korail (www.letskorail.com) wrapper for Python.
 
@@ -100,11 +99,9 @@ You can get your tickes with `tickets` method.
 
 ### 4. Get tickets already paid ###
 
-<<<<<<< HEAD
 You can see your ticket list with `tickets` method.
 =======
 You can get the list of paid tickes with `tickets` method.
->>>>>>> 9ae522b33f7d335c1472c87651f4f4b1d2a0f677
 
     >>> tickets = korail.tickets()
     정상발매처리,정상발권처리
