@@ -1,6 +1,9 @@
 Korail2
 =======
 
+`|PyPi version| <https://crate.io/packages/korail2/>`_ `|PyPi
+downloads| <https://crate.io/packages/korail2/>`_
+
 Korail (www.letskorail.com) wrapper for Python.
 
 This project was inspired from
@@ -9,6 +12,12 @@ This project was inspired from
 
 `korail <https://github.com/devxoul/korail>`_ is not working anymore
 becuase of a huge change in Korail API.
+
+Documentation
+-------------
+
+The documentation is available at
+`here <http://carpedm20.github.io/korail2/>`_
 
 Installing
 ----------
@@ -105,16 +114,16 @@ You can get your tickes with ``tickets`` method.
     >>> seat
     [KTX] 8월 3일, 서울~부산(11:00~:) 16호 6A
 
-4. Get tickets
-~~~~~~~~~~~~~~
+4. Get tickets already paid
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can get your tickes with ``tickets`` method.
+You can get the list of paid tickes with ``tickets`` method.
 
 ::
 
-    >>> tickets = k.tickets()
+    >>> tickets = korail.tickets()
     정상발매처리,정상발권처리
-    >>> tickets
+    >>> print tickets
     [[KTX] 8월 10일, 동대구~울산(09:26~09:54) => 5호 4A, 13900원]
 
 How do I get the Korail API
@@ -139,3 +148,6 @@ Author
 ------
 
 Taehoon Kim / `@carpedm20 <http://carpedm20.github.io/about/>`_
+
+.. |PyPi version| image:: https://pypip.in/v/korail2/badge.png
+.. |PyPi downloads| image:: https://pypip.in/d/korail2/badge.png

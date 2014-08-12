@@ -4,6 +4,9 @@ Korail2
 [![PyPi version](https://pypip.in/v/korail2/badge.png)](https://crate.io/packages/korail2/)
 [![PyPi downloads](https://pypip.in/d/korail2/badge.png)](https://crate.io/packages/korail2/)
 
+- **2014.08.11 ANNOUNCEMENT** : *Good* news! this library is working again right now! Thanks for [hyeshik](https://github.com/hyeshik)
+- 2014.08.07 ANNOUNCEMENT : *Bad* news.. this library is not working right now... I have to check which part of API is changed ASAP :(
+
 Korail (www.letskorail.com) wrapper for Python.
 
 This project was inspired from [korail](https://github.com/devxoul/korail) of [devxoul](https://github.com/devxoul).
@@ -95,9 +98,13 @@ You can get your tickes with `tickets` method.
     >>> seat
     [KTX] 8월 3일, 서울~부산(11:00~:) 16호 6A
 
-### 4. Get tickets###
+### 4. Get tickets already paid ###
 
+<<<<<<< HEAD
 You can see your ticket list with `tickets` method.
+=======
+You can get the list of paid tickes with `tickets` method.
+>>>>>>> 9ae522b33f7d335c1472c87651f4f4b1d2a0f677
 
     >>> tickets = korail.tickets()
     정상발매처리,정상발권처리
@@ -116,6 +123,15 @@ How do I get the Korail API
 6. Key signing with `motizen-sign`
 7. Upload and run a new Korail apk
 8. Capture packets and analyze the API
+
+
+Todo
+----
+
+1. Distinguish adult and child
+2. Make an option to select special seat or general seat when reserving
+3. Make an option to reserve multiple seats at a time
+4. Implement payment API
 
 
 License
