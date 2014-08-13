@@ -32,6 +32,8 @@ KORAIL_TICKETRESERVATION = "%s.certification.TicketReservation" % KORAIL_MOBILE
 KORAIL_REFUND            = "%s.refunds.RefundsRequest" % KORAIL_MOBILE
 KORAIL_MYTICKETLIST      = "%s.myTicket.MyTicketList" % KORAIL_MOBILE
 
+KORAIL_MYRESERVATIONLIST = "%s.reservation.ReservationView" % KORAIL_MOBILE
+
 KORAIL_STATION_DB       = "%s.common.stationinfo?device=ip" % KORAIL_MOBILE
 KORAIL_STATION_DB_DATA  = "%s.common.stationdata" % KORAIL_MOBILE
 KORAIL_EVENT            = "%s.common.event" % KORAIL_MOBILE
@@ -560,3 +562,9 @@ class Korail(object):
                 tickets.append(ticket)
 
             return tickets
+
+    def reservations(self):
+        pass
+
+    def cancel(self):
+        pass
