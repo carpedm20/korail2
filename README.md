@@ -100,7 +100,6 @@ You can get your tickes with `tickets` method.
 ### 4. Get tickets already paid ###
 
 You can see your ticket list with `tickets` method.
-=======
 You can get the list of paid tickes with `tickets` method.
 
     >>> tickets = korail.tickets()
