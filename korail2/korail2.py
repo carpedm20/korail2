@@ -157,14 +157,15 @@ class Train(Schedule):
 
 class Ticket(Train):
     """Ticket object"""
+
     #: 열차 번호
     car_no = None # h_srcar_no
 
-    #: 자리 번호
-    seat_no = None # h_seat_no
-
     #: 자리 갯수
     seat_no_count = None # h_seat_cnt  ex) 001
+
+    #: 자리 번호
+    seat_no = None # h_seat_no
 
     #: 자리 번호
     seat_no_end = None # h_seat_no_end
@@ -210,6 +211,38 @@ class Ticket(Train):
                                 sale_info3,
                                 sale_info4)
 
+
+class Reservation(Train):
+    """Revervation object"""
+
+    #: 예약번호
+    rsv_id = None # h_pnr_no
+
+    #: 자리 갯수
+    seat_no_count = None # h_tot_seat_cnt  ex) 001
+
+    #: 결제 기한 날짜
+    buy_limit_date = None # h_ntisu_lmt_dt
+
+    #: 결제 기한 시간
+    buy_limit_time = None # h_ntisu_lmt_tm
+
+    #: 예약 가격
+    price = None # h_rsv_amt  ex) 00013900
+
+    def __repr__(self):
+        repr_str = super(Train, self).__repr__()
+
+        repr_str += ", %s원" % self.price
+
+        buy_limit_time = "%s:%s" % (self.buy_limit_time[:2], self.buy_limit_time[2:4])
+
+        buy_limit_date = "%s월 %s일" % (int(self.buy_limit_date[4:6]),
+                                  int(self.buy_limit_date[6:]))
+
+        repr_str += ", 구입기한 %s %s" % (buy_limit_date, buy_limit_time)
+
+        return repr_str
 
 class Seat(Schedule):
     """Ticket object"""
@@ -579,7 +612,50 @@ class Korail(object):
             return tickets
 
     def reservations(self):
-        pass
+        url = KORAIL_MYRESERVATIONLIST
+        data = {
+            'Device'         : self._device,
+            'Version'        : self._version,
+            'Key'            : self._key,
+        }
+        r = self._session.post(url, data=data)
+        j = json.loads(r.text)
+        if self._result_check(j):
+            rsv_infos = j['jrny_infos']['jrny_info']
+
+            reserves = []
+
+            for info in rsv_infos:
+                for i in info:
+                    try: info[i] = info[i].encode('utf-8')
+                    except: pass
+
+                rsv = Reservation()
+                rsv.train_type      = info['h_trn_clsf_cd']
+                rsv.train_type_name = info['h_trn_clsf_nm']
+                rsv.train_no        = info['h_trn_no']
+
+                rsv.dep_name = info['h_dpt_rs_stn_nm']
+                rsv.dep_code = info['h_dpt_rs_stn_cd']
+                rsv.dep_date = info['h_run_dt']
+                rsv.dep_time = info['h_dpt_tm']
+
+                rsv.arr_name = info['h_arv_rs_stn_nm']
+                rsv.arr_code = info['h_arv_rs_stn_cd']
+                rsv.arr_date = info['h_run_dt']
+                rsv.arr_time = info['h_arv_tm']
+
+                rsv.rsv_id         = info['h_pnr_no']
+                rsv.seat_no_count  = int(info['h_tot_seat_cnt'])
+                rsv.buy_limit_date = info['h_ntisu_lmt_dt']
+                rsv.buy_limit_time = info['h_ntisu_lmt_tm']
+                rsv.price          = int(info['h_rsv_amt'])
+
+                reserves.append(rsv)
+
+            return reserves
+
+
 
     def cancel(self):
         pass

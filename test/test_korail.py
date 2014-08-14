@@ -54,13 +54,16 @@ class TestKorail(TestCase):
     def test_reservations(self):
         reserves = self.korail.reservations()
         self.assertIsNotNone(reserves, "success")
+        print reserves
 
     def test_cancel(self):
-        self.skipTest("Not implemented")
-        # tomorrow = date.today() + timedelta(days=1)
-        # trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
-        # empty_seats = filter(lambda x:"11" in (x.special_seat, x.general_seat), trains)
-        # if len(empty_seats) > 0:
-        #     self.korail.reserve(empty_seats[0])
-        # else:
-        #     self.skipTest("No Empty Seats tomorrow.")
+        # self.skipTest("Not implemented")
+        tomorrow = date.today() + timedelta(days=1)
+        trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
+        for train in trains:
+            print train
+        empty_seats = filter(lambda x:"11" in (x.special_seat, x.general_seat), trains)
+        if len(empty_seats) > 0:
+            self.korail.reserve(empty_seats[0])
+        else:
+            self.skipTest("No Empty Seats tomorrow.")
