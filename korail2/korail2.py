@@ -612,6 +612,7 @@ class Korail(object):
             return tickets
 
     def reservations(self):
+        """ Get My Reservations """
         url = KORAIL_MYRESERVATIONLIST
         data = {
             'Device'         : self._device,
@@ -655,7 +656,6 @@ class Korail(object):
 
             return reserves
 
-
-
-    def cancel(self):
+    def cancel(self, rsv_id):
+        """ Cancel Reservation : Canceling is for reservation, for ticket would be Refunding """
         pass

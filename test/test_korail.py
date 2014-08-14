@@ -26,14 +26,14 @@ class TestKorail(TestCase):
     def test_login(self):
         try:
             self.korail.login()
-            self.assertTrue(self.korail.logined,"로그인 성공 체크")
+            self.assertTrue(self.korail.logined, "로그인 성공 체크")
         except Exception, e:
             self.fail(e)
 
     def test_logout(self):
         try:
             self.korail.logout()
-            self.assertFalse(self.korail.logined,"로그아웃 성공 체크")
+            self.assertFalse(self.korail.logined, "로그아웃 성공 체크")
         except Exception, e:
             self.fail(e)
 
@@ -52,9 +52,12 @@ class TestKorail(TestCase):
         self.skipTest("Not implemented")
 
     def test_reservations(self):
-        reserves = self.korail.reservations()
-        self.assertIsNotNone(reserves, "success")
-        print reserves
+        try:
+            reserves = self.korail.reservations()
+            self.assertIsNotNone(reserves, "get reservation list")
+            print reserves
+        except Exception, e:
+            self.skipTest(e.message)
 
     def test_cancel(self):
         # self.skipTest("Not implemented")
@@ -62,8 +65,16 @@ class TestKorail(TestCase):
         trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
         for train in trains:
             print train
-        empty_seats = filter(lambda x:"11" in (x.special_seat, x.general_seat), trains)
+        empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
         if len(empty_seats) > 0:
-            self.korail.reserve(empty_seats[0])
+            rsv = self.korail.reserve(empty_seats[0])
+            rsvlist = self.korail.reservations()
+            matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+            self.assertEqual(len(matched), 1, "make a reservation")
+
+            self.korail.cancel(rsv.rsv_id)
+            rsvlist = self.korail.reservations()
+            matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+            self.assertEqual(len(matched), 0, "cancel the reservation")
         else:
             self.skipTest("No Empty Seats tomorrow.")
