@@ -15,3 +15,6 @@ develop-eggs
 
 # Vim
 .*.sw[op]
+
+test/korail_idpw.txt
+.idea

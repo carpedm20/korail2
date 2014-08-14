@@ -32,6 +32,8 @@ KORAIL_TICKETRESERVATION = "%s.certification.TicketReservation" % KORAIL_MOBILE
 KORAIL_REFUND            = "%s.refunds.RefundsRequest" % KORAIL_MOBILE
 KORAIL_MYTICKETLIST      = "%s.myTicket.MyTicketList" % KORAIL_MOBILE
 
+KORAIL_MYRESERVATIONLIST = "%s.reservation.ReservationView" % KORAIL_MOBILE
+
 KORAIL_STATION_DB       = "%s.common.stationinfo?device=ip" % KORAIL_MOBILE
 KORAIL_STATION_DB_DATA  = "%s.common.stationdata" % KORAIL_MOBILE
 KORAIL_EVENT            = "%s.common.event" % KORAIL_MOBILE
@@ -155,14 +157,15 @@ class Train(Schedule):
 
 class Ticket(Train):
     """Ticket object"""
+
     #: 열차 번호
     car_no = None # h_srcar_no
 
-    #: 자리 번호
-    seat_no = None # h_seat_no
-
     #: 자리 갯수
     seat_no_count = None # h_seat_cnt  ex) 001
+
+    #: 자리 번호
+    seat_no = None # h_seat_no
 
     #: 자리 번호
     seat_no_end = None # h_seat_no_end
@@ -209,6 +212,38 @@ class Ticket(Train):
                                 sale_info4)
 
 
+class Reservation(Train):
+    """Revervation object"""
+
+    #: 예약번호
+    rsv_id = None # h_pnr_no
+
+    #: 자리 갯수
+    seat_no_count = None # h_tot_seat_cnt  ex) 001
+
+    #: 결제 기한 날짜
+    buy_limit_date = None # h_ntisu_lmt_dt
+
+    #: 결제 기한 시간
+    buy_limit_time = None # h_ntisu_lmt_tm
+
+    #: 예약 가격
+    price = None # h_rsv_amt  ex) 00013900
+
+    def __repr__(self):
+        repr_str = super(Train, self).__repr__()
+
+        repr_str += ", %s원" % self.price
+
+        buy_limit_time = "%s:%s" % (self.buy_limit_time[:2], self.buy_limit_time[2:4])
+
+        buy_limit_date = "%s월 %s일" % (int(self.buy_limit_date[4:6]),
+                                  int(self.buy_limit_date[6:]))
+
+        repr_str += ", 구입기한 %s %s" % (buy_limit_date, buy_limit_time)
+
+        return repr_str
+
 class Seat(Schedule):
     """Ticket object"""
     #: Schedule
@@ -248,13 +283,15 @@ class Korail(object):
     name = None
     email = None
 
-    def __init__(self, id, password):
+    def __init__(self, id, password, auto_login=True, want_feedback=False):
         self.id = id
         self.password = password
+        self.want_feedback = want_feedback
+        self.logined = False
+        if auto_login:
+            self.login(id, password)
 
-        self.login(id, password)
-
-    def login(self, id, password):
+    def login(self, id=None, password=None):
         """Login to Korail server.
 
         :param id: `Korail membership number` or `phone number` or `email`
@@ -263,6 +300,16 @@ class Korail(object):
                    email        : xxx@xxx.xxx
         :param password: Korail account password
         """
+        if id is None:
+            id = self.id
+        else:
+            self.id = id
+
+        if password is None:
+            password = self.password
+        else:
+            self.password = password
+
         if EMAIL_REGEX.match(id):
             txtInputFlg = '5'
         elif PHONE_NUMBER_REGEX.match(id):
@@ -291,24 +338,27 @@ class Korail(object):
             self.membership_number = j['strMbCrdNo']
             self.name = j['strCustNm']
             self.email = j['strEmailAdr']
-
+            self.logined = True
             return True
         else:
+            self.logined = False
             return False
 
     def logout(self):
         """Logout from Korail server"""
         url = KORAIL_LOGOUT
         self._session.get(url)
+        self.logined = False
 
     def _result_check(self, j):
         """Result data check"""
-        print j['h_msg_txt']
+        if self.want_feedback:
+            print j['h_msg_txt']
 
         if j['strResult'] == 'FAIL':
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')
             h_msg_txt = j['h_msg_txt'].encode('utf-8')
-
+            # P058 : 로그인 필요
             raise Exception("%s (%s)" % (h_msg_txt, h_msg_cd))
         else:
             return True
@@ -349,7 +399,7 @@ class Korail(object):
             'txtGoStart'     : dep,
             'txtGoEnd'       : arr,
             'txtGoHour'      : time, #'071500',
-            'txtPsgFlg_1'    : '1',
+            'txtPsgFlg_1'    : '1',  #일반인 1명
             'txtPsgFlg_2'    : '0',
             'txtPsgFlg_3'    : '0',
             'txtPsgFlg_4'    : '0',
@@ -560,3 +610,52 @@ class Korail(object):
                 tickets.append(ticket)
 
             return tickets
+
+    def reservations(self):
+        url = KORAIL_MYRESERVATIONLIST
+        data = {
+            'Device'         : self._device,
+            'Version'        : self._version,
+            'Key'            : self._key,
+        }
+        r = self._session.post(url, data=data)
+        j = json.loads(r.text)
+        if self._result_check(j):
+            rsv_infos = j['jrny_infos']['jrny_info']
+
+            reserves = []
+
+            for info in rsv_infos:
+                for i in info:
+                    try: info[i] = info[i].encode('utf-8')
+                    except: pass
+
+                rsv = Reservation()
+                rsv.train_type      = info['h_trn_clsf_cd']
+                rsv.train_type_name = info['h_trn_clsf_nm']
+                rsv.train_no        = info['h_trn_no']
+
+                rsv.dep_name = info['h_dpt_rs_stn_nm']
+                rsv.dep_code = info['h_dpt_rs_stn_cd']
+                rsv.dep_date = info['h_run_dt']
+                rsv.dep_time = info['h_dpt_tm']
+
+                rsv.arr_name = info['h_arv_rs_stn_nm']
+                rsv.arr_code = info['h_arv_rs_stn_cd']
+                rsv.arr_date = info['h_run_dt']
+                rsv.arr_time = info['h_arv_tm']
+
+                rsv.rsv_id         = info['h_pnr_no']
+                rsv.seat_no_count  = int(info['h_tot_seat_cnt'])
+                rsv.buy_limit_date = info['h_ntisu_lmt_dt']
+                rsv.buy_limit_time = info['h_ntisu_lmt_tm']
+                rsv.price          = int(info['h_rsv_amt'])
+
+                reserves.append(rsv)
+
+            return reserves
+
+
+
+    def cancel(self):
+        pass
