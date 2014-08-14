@@ -9,4 +9,4 @@ Development Lead
 Core Contributors
 `````````````````
 
-- sng2cv <sng2nara@gmail.com> `@sng2c <https://github.com/sng2c>`_
+- HyeonSeung Kim <sng2nara@gmail.com> `@sng2c <https://github.com/sng2c>`_
