@@ -250,13 +250,15 @@ class Korail(object):
     name = None
     email = None
 
-    def __init__(self, id, password):
+    def __init__(self, id, password, auto_login=True, want_feedback=False):
         self.id = id
         self.password = password
+        self.want_feedback = want_feedback
+        self.logined = False
+        if auto_login:
+            self.login(id, password)
 
-        self.login(id, password)
-
-    def login(self, id, password):
+    def login(self, id=None, password=None):
         """Login to Korail server.
 
         :param id: `Korail membership number` or `phone number` or `email`
@@ -265,6 +267,16 @@ class Korail(object):
                    email        : xxx@xxx.xxx
         :param password: Korail account password
         """
+        if id is None:
+            id = self.id
+        else:
+            self.id = id
+
+        if password is None:
+            password = self.password
+        else:
+            self.password = password
+
         if EMAIL_REGEX.match(id):
             txtInputFlg = '5'
         elif PHONE_NUMBER_REGEX.match(id):
@@ -293,19 +305,22 @@ class Korail(object):
             self.membership_number = j['strMbCrdNo']
             self.name = j['strCustNm']
             self.email = j['strEmailAdr']
-
+            self.logined = True
             return True
         else:
+            self.logined = False
             return False
 
     def logout(self):
         """Logout from Korail server"""
         url = KORAIL_LOGOUT
         self._session.get(url)
+        self.logined = False
 
     def _result_check(self, j):
         """Result data check"""
-        print j['h_msg_txt']
+        if self.want_feedback:
+            print j['h_msg_txt']
 
         if j['strResult'] == 'FAIL':
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')
