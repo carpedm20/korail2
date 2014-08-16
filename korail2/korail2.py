@@ -33,6 +33,7 @@ KORAIL_REFUND            = "%s.refunds.RefundsRequest" % KORAIL_MOBILE
 KORAIL_MYTICKETLIST      = "%s.myTicket.MyTicketList" % KORAIL_MOBILE
 
 KORAIL_MYRESERVATIONLIST = "%s.reservation.ReservationView" % KORAIL_MOBILE
+KORAIL_CANCEL            = "%s.reservationCancel.ReservationCancel" % KORAIL_MOBILE
 
 KORAIL_STATION_DB       = "%s.common.stationinfo?device=ip" % KORAIL_MOBILE
 KORAIL_STATION_DB_DATA  = "%s.common.stationdata" % KORAIL_MOBILE
@@ -206,10 +207,10 @@ class Ticket(Train):
         return repr_str
 
     def get_ticket_no(self):
-        return "%s-%s-%s-%s" % (sale_info1,
-                                sale_info2,
-                                sale_info3,
-                                sale_info4)
+        return "%s-%s-%s-%s" % (self.sale_info1,
+                                self.sale_info2,
+                                self.sale_info3,
+                                self.sale_info4)
 
 
 class Reservation(Train):
@@ -217,6 +218,15 @@ class Reservation(Train):
 
     #: 예약번호
     rsv_id = None # h_pnr_no
+
+    #: 여정 번호
+    journey_no = None
+
+    #: 여정 카운트
+    journey_cnt = None
+
+    #: 예약변경 번호?
+    rsv_chg_no = None
 
     #: 자리 갯수
     seat_no_count = None # h_tot_seat_cnt  ex) 001
@@ -265,10 +275,10 @@ class Seat(Schedule):
         return repr_str
 
     def get_ticket_no(self):
-        return "%s-%s-%s-%s" % (sale_info1,
-                                sale_info2,
-                                sale_info3,
-                                sale_info4)
+        return "%s-%s-%s-%s" % (self.sale_info1,
+                                self.sale_info2,
+                                self.sale_info3,
+                                self.sale_info4)
 
 
 class Korail(object):
@@ -363,7 +373,8 @@ class Korail(object):
         else:
             return True
 
-    def search_train(self, dep, arr, date=None, time=None, train_type='05'):
+    def search_train(self, dep, arr, date=None, time=None, train_type='05',
+                     adult=1):
         """Search trains for specific time and date.
 
         :param dep: A departure station in Korean  ex) '서울'
@@ -399,7 +410,7 @@ class Korail(object):
             'txtGoStart'     : dep,
             'txtGoEnd'       : arr,
             'txtGoHour'      : time, #'071500',
-            'txtPsgFlg_1'    : '1',  #일반인 1명
+            'txtPsgFlg_1'    : str(adult),  #일반인
             'txtPsgFlg_2'    : '0',
             'txtPsgFlg_3'    : '0',
             'txtPsgFlg_4'    : '0',
@@ -459,6 +470,8 @@ class Korail(object):
 
         :param train: An instance of `Train`.
         """
+        # train : 예약을 위한 차량의 필수 정보를 가진 모든 객체를 이용할 수 있어야 한다.
+
         url = KORAIL_TICKETRESERVATION
         data = {
             'Device'         : self._device,
@@ -519,6 +532,7 @@ class Korail(object):
                     try: info[i] = info[i].encode('utf-8')
                     except: pass
 
+                # Seat 상속을 이용할 것
                 schedule = Schedule()
 
                 schedule.train_type      = info['h_trn_clsf_cd']
@@ -658,4 +672,5 @@ class Korail(object):
 
     def cancel(self, rsv_id):
         """ Cancel Reservation : Canceling is for reservation, for ticket would be Refunding """
+        url = KORAIL_CANCEL
         pass
