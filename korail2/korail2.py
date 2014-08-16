@@ -303,12 +303,18 @@ class Korail(object):
 
     def login(self, id=None, password=None):
         """Login to Korail server.
+:param id: `Korail membership number` or `phone number` or `email`
+    membership   : xxxxxxxx (8 digits)
+    phone number : xxx-xxxx-xxxx
+    email        : xxx@xxx.xxx
+:param password: Korail account password
 
-        :param id: `Korail membership number` or `phone number` or `email`
-                   membership   : xxxxxxxx (8 digits) 
-                   phone number : xxx-xxxx-xxxx
-                   email        : xxx@xxx.xxx
-        :param password: Korail account password
+First, you need to create a Korail object.
+
+    >>> from korail2 import Korail
+    >>> korail = Korail("12345678", YOUR_PASSWORD) # with membership number
+    >>> korail = Korail("carpedm20@gmail.com", YOUR_PASSWORD) # with email
+    >>> korail = Korail("010-9964-xxxx", YOUR_PASSWORD) # with phone number
         """
         if id is None:
             id = self.id
@@ -377,21 +383,39 @@ class Korail(object):
                      adult=1):
         """Search trains for specific time and date.
 
-        :param dep: A departure station in Korean  ex) '서울'
-        :param arr: A arrival station in Korean  ex) '부산'
-        :param date: (optional) A departure date in `yyyyMMdd` format
-        :param time: (optional) A departure time in `hhmmss` format
-        :param train_type: (optional) A type of train
-                           - 00: KTX, KTX-산천
-                           - 01: 새마을호
-                           - 02: 무궁화호
-                           - 03: 통근열차
-                           - 04: 누리로
-                           - 05: 전체 (기본값)
-                           - 06: 공학직통
-                           - 07: KTX-산천
-                           - 08: ITX-새마을
-                           - 09: ITX-청춘
+:param dep: A departure station in Korean  ex) '서울'
+:param arr: A arrival station in Korean  ex) '부산'
+:param date: (optional) A departure date in `yyyyMMdd` format
+:param time: (optional) A departure time in `hhmmss` format
+:param train_type: (optional) A type of train
+                   - 00: KTX, KTX-산천
+                   - 01: 새마을호
+                   - 02: 무궁화호
+                   - 03: 통근열차
+                   - 04: 누리로
+                   - 05: 전체 (기본값)
+                   - 06: 공학직통
+                   - 07: KTX-산천
+                   - 08: ITX-새마을
+                   - 09: ITX-청춘
+
+Below is a sample code of `search_train`:
+
+    >>> dep = '서울'
+    >>> arr = '동대구'
+    >>> date = '20140815'
+    >>> time = '144000'
+    >>> trains = korail.search_train(dep, arr, date, time)
+    [[KTX] 8월 3일, 서울~부산(11:00~13:42) [특실:1][일반실:1] 예약가능,
+     [ITX-새마을] 8월 3일, 서울~부산(11:04~16:00) [일반실:1] 예약가능,
+     [무궁화호] 8월 3일, 서울~부산(11:08~16:54) [일반실:0] 입석 역발매중,
+     [ITX-새마을] 8월 3일, 서울~부산(11:50~16:50) [일반실:0] 입석 역발매중,
+     [KTX] 8월 3일, 서울~부산(12:00~14:43) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:30~15:13) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:40~15:45) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:55~15:26) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(13:00~15:37) [특실:1][일반실:1] 예약가능,
+     [KTX] 8월 3일, 서울~부산(13:10~15:58) [특실:1][일반실:1] 예약가능]
         """
         if date == None:
             date = datetime.now().strftime("%Y%m%d")
@@ -468,7 +492,16 @@ class Korail(object):
     def reserve(self, train):
         """Reserve a train.
 
-        :param train: An instance of `Train`.
+:param train: An instance of `Train`.
+
+You can get your tickes with `tickets` method.
+
+    >>> trains = korail.search_train(dep, arr, date, time)
+    >>> seat = korail.reserve(trains[0])
+    정상처리되었습니다
+    동일시간대 예약발매내역이 있습니다.
+    >>> seat
+    [KTX] 8월 3일, 서울~부산(11:00~:) 16호 6A
         """
         # train : 예약을 위한 차량의 필수 정보를 가진 모든 객체를 이용할 수 있어야 한다.
 
@@ -567,7 +600,17 @@ class Korail(object):
             return seats[0]
     
     def tickets(self):
-        """Get list of tickets"""
+        """Get list of tickets
+
+You can see your ticket list with `tickets` method.
+You can get the list of paid tickes with `tickets` method.
+
+    >>> tickets = korail.tickets()
+    정상발매처리,정상발권처리
+    >>> print tickets
+    [[KTX] 8월 10일, 동대구~울산(09:26~09:54) => 5호 4A, 13900원]
+
+"""
         url = KORAIL_MYTICKETLIST
         data = {
             'Device'         : self._device,
