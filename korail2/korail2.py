@@ -95,6 +95,25 @@ class Schedule(object):
     #: ???? 시각 (yyyyMMdd)
     run_date = None # h_run_dt
 
+    def __init__(self, data):
+        self.train_type      = data.get('h_trn_clsf_cd')
+        self.train_type_name = data.get('h_trn_clsf_nm')
+        self.train_no        = data.get('h_trn_no')
+        self.delay_time      = data.get('h_expct_dlay_hr')
+
+        self.dep_name = data.get('h_dpt_rs_stn_nm')
+        self.dep_code = data.get('h_dpt_rs_stn_cd')
+        self.dep_date = data.get('h_dpt_dt')
+        self.dep_time = data.get('h_dpt_tm')
+
+        self.arr_name = data.get('h_arv_rs_stn_nm')
+        self.arr_code = data.get('h_arv_rs_stn_cd')
+        self.arr_date = data.get('h_arv_dt')
+        self.arr_time = data.get('h_arv_tm')
+
+        self.run_date = data.get('h_run_dt')
+
+
     def __repr__(self):
         dep_time = "%s:%s" % (self.dep_time[:2], self.dep_time[2:4])
         arr_time = "%s:%s" % (self.arr_time[:2], self.arr_time[2:4])
@@ -136,6 +155,14 @@ class Train(Schedule):
     #: 13: 매진
     general_seat = False # h_gen_rsv_cd
 
+    def __init__(self, data):
+        super(Train, self).__init__(data)
+        self.reserve_possible      = data.get('h_rsv_psb_flg')
+        self.reserve_possible_name = data.get('h_rsv_psb_nm')
+
+        self.special_seat = data.get('h_spe_rsv_cd')
+        self.general_seat = data.get('h_gen_rsv_cd')
+
     def __repr__(self):
         repr_str = super(Train, self).__repr__() + " "
 
@@ -153,7 +180,10 @@ class Train(Schedule):
                 general_seat = False
             repr_str += '[일반실:%d]' % general_seat
 
-        return repr_str + " " + self.reserve_possible_name.replace('\n',' ')
+        if self.reserve_possible_name is not None:
+            repr_str +=  " " + self.reserve_possible_name.replace('\n',' ')
+
+        return repr_str
 
 
 class Ticket(Train):
@@ -192,6 +222,22 @@ class Ticket(Train):
     #: 구매 가격
     price = None # h_rcvd_amt  ex) 00013900
 
+    def __init__(self, data):
+        super(Ticket, self).__init__(data)
+        self.car_no        = data.get('h_srcar_no')
+        self.seat_no       = data.get('h_seat_no')
+        self.seat_no_end   = data.get('h_seat_no_end')
+        self.seat_no_count = int(data.get('h_seat_cnt'))
+
+        self.buyer_name = data.get('h_buy_ps_nm')
+        self.sale_date  = data.get('h_orgtk_sale_dt')
+        self.sale_info1 = data.get('h_orgtk_wct_no')
+        self.sale_info2 = data.get('h_orgtk_ret_sale_dt')
+        self.sale_info3 = data.get('h_orgtk_sale_sqno')
+        self.sale_info4 = data.get('h_orgtk_ret_pwd')
+        self.price      = int(data.get('h_rcvd_amt'))
+
+
     def __repr__(self):
         repr_str = super(Train, self).__repr__()
 
@@ -220,10 +266,10 @@ class Reservation(Train):
     rsv_id = None # h_pnr_no
 
     #: 여정 번호
-    journey_no = None
+    journey_no = None # txtJrnySqno
 
     #: 여정 카운트
-    journey_cnt = None
+    journey_cnt = None # txtJrnyCnt
 
     #: 예약변경 번호?
     rsv_chg_no = None
@@ -240,8 +286,25 @@ class Reservation(Train):
     #: 예약 가격
     price = None # h_rsv_amt  ex) 00013900
 
+    #: ? - 취소시 필요
+    hidRsvChgNo = "00000"
+
+    def __init__(self, data):
+        super(Reservation, self).__init__(data)
+
+        self.dep_date = data.get('h_run_dt')
+        self.arr_date = data.get('h_run_dt')
+
+        self.rsv_id         = data.get('h_pnr_no')
+        self.seat_no_count  = int(data.get('h_tot_seat_cnt'))
+        self.buy_limit_date = data.get('h_ntisu_lmt_dt')
+        self.buy_limit_time = data.get('h_ntisu_lmt_tm')
+        self.price          = int(data.get('h_rsv_amt'))
+        self.journey_no     = data.get('txtJrnySqno')
+        self.journey_cnt    = data.get('txtJrnyCnt')
+
     def __repr__(self):
-        repr_str = super(Train, self).__repr__()
+        repr_str = super(Reservation, self).__repr__()
 
         repr_str += ", %s원" % self.price
 
@@ -308,14 +371,7 @@ class Korail(object):
     phone number : xxx-xxxx-xxxx
     email        : xxx@xxx.xxx
 :param password: Korail account password
-
-First, you need to create a Korail object.
-
-    >>> from korail2 import Korail
-    >>> korail = Korail("12345678", YOUR_PASSWORD) # with membership number
-    >>> korail = Korail("carpedm20@gmail.com", YOUR_PASSWORD) # with email
-    >>> korail = Korail("010-9964-xxxx", YOUR_PASSWORD) # with phone number
-        """
+"""
         if id is None:
             id = self.id
         else:
@@ -398,25 +454,7 @@ First, you need to create a Korail object.
                    - 07: KTX-산천
                    - 08: ITX-새마을
                    - 09: ITX-청춘
-
-Below is a sample code of `search_train`:
-
-    >>> dep = '서울'
-    >>> arr = '동대구'
-    >>> date = '20140815'
-    >>> time = '144000'
-    >>> trains = korail.search_train(dep, arr, date, time)
-    [[KTX] 8월 3일, 서울~부산(11:00~13:42) [특실:1][일반실:1] 예약가능,
-     [ITX-새마을] 8월 3일, 서울~부산(11:04~16:00) [일반실:1] 예약가능,
-     [무궁화호] 8월 3일, 서울~부산(11:08~16:54) [일반실:0] 입석 역발매중,
-     [ITX-새마을] 8월 3일, 서울~부산(11:50~16:50) [일반실:0] 입석 역발매중,
-     [KTX] 8월 3일, 서울~부산(12:00~14:43) [특실:1][일반실:1] 예약가능,
-     [KTX] 8월 3일, 서울~부산(12:30~15:13) [특실:1][일반실:1] 예약가능,
-     [KTX] 8월 3일, 서울~부산(12:40~15:45) [특실:1][일반실:1] 예약가능,
-     [KTX] 8월 3일, 서울~부산(12:55~15:26) [특실:1][일반실:1] 예약가능,
-     [KTX] 8월 3일, 서울~부산(13:00~15:37) [특실:1][일반실:1] 예약가능,
-     [KTX] 8월 3일, 서울~부산(13:10~15:58) [특실:1][일반실:1] 예약가능]
-        """
+"""
         if date == None:
             date = datetime.now().strftime("%Y%m%d")
         if time == None:
@@ -461,31 +499,7 @@ Below is a sample code of `search_train`:
                     try: info[i] = info[i].encode('utf-8')
                     except: pass
 
-                train = Train()
-                train.train_type      = info['h_trn_clsf_cd']
-                train.train_type_name = info['h_trn_clsf_nm']
-                train.train_no        = info['h_trn_no']
-                train.delay_time      = info['h_expct_dlay_hr']
-
-                train.dep_name = info['h_dpt_rs_stn_nm']
-                train.dep_code = info['h_dpt_rs_stn_cd']
-                train.dep_date = info['h_dpt_dt']
-                train.dep_time = info['h_dpt_tm']
-
-                train.arr_name = info['h_arv_rs_stn_nm']
-                train.arr_code = info['h_arv_rs_stn_cd']
-                train.arr_date = info['h_arv_dt']
-                train.arr_time = info['h_arv_tm']
-
-                train.run_date = info['h_run_dt']
-
-                train.reserve_possible      = info['h_rsv_psb_flg']
-                train.reserve_possible_name = info['h_rsv_psb_nm']
-
-                train.special_seat = info['h_spe_rsv_cd']
-                train.general_seat = info['h_gen_rsv_cd']
-
-                trains.append(train)
+                trains.append(Train(info))
 
             return trains
 
@@ -493,15 +507,6 @@ Below is a sample code of `search_train`:
         """Reserve a train.
 
 :param train: An instance of `Train`.
-
-You can get your tickes with `tickets` method.
-
-    >>> trains = korail.search_train(dep, arr, date, time)
-    >>> seat = korail.reserve(trains[0])
-    정상처리되었습니다
-    동일시간대 예약발매내역이 있습니다.
-    >>> seat
-    [KTX] 8월 3일, 서울~부산(11:00~:) 16호 6A
         """
         # train : 예약을 위한 차량의 필수 정보를 가진 모든 객체를 이용할 수 있어야 한다.
 
@@ -556,61 +561,13 @@ You can get your tickes with `tickets` method.
         j = json.loads(r.text)
 
         if self._result_check(j):
-            journey_infos = j['jrny_infos']['jrny_info']
-
-            seats = []
-
-            for info in journey_infos:
-                for i in info:
-                    try: info[i] = info[i].encode('utf-8')
-                    except: pass
-
-                # Seat 상속을 이용할 것
-                schedule = Schedule()
-
-                schedule.train_type      = info['h_trn_clsf_cd']
-                schedule.train_type_name = info['h_trn_clsf_nm']
-                schedule.train_no        = info['h_trn_no']
-
-                schedule.dep_name = info['h_dpt_rs_stn_nm']
-                schedule.dep_code = info['h_dpt_rs_stn_cd']
-                schedule.dep_date = info['h_dpt_dt']
-                schedule.dep_time = info['h_dpt_tm']
-
-                schedule.arr_name = info['h_arv_rs_stn_nm']
-                schedule.arr_code = info['h_arv_rs_stn_cd']
-                schedule.arr_date = ''
-                schedule.arr_time = ''
-
-                seat_infos = info['seat_infos']['seat_info']
-
-                for s_info in seat_infos:
-                    for i in s_info:
-                        try: s_info[i] = s_info[i].encode('utf-8')
-                        except: pass
-                    seat = Seat()
-
-                    seat.schedule      = schedule
-                    seat.car_no        = s_info['h_srcar_no']
-                    seat.seat_no       = s_info['h_seat_no']
-                    seat.seat_no_count = s_info['h_cont_seat_cnt']
-
-                    seats.append(seat)
-
-            return seats[0]
+            rsv_id = j['h_pnr_no']
+            rsvlist = filter(lambda x:x.rsv_id == rsv_id, self.reservations())
+            if len(rsvlist) == 1:
+                return rsvlist[0]
     
     def tickets(self):
-        """Get list of tickets
-
-You can see your ticket list with `tickets` method.
-You can get the list of paid tickes with `tickets` method.
-
-    >>> tickets = korail.tickets()
-    정상발매처리,정상발권처리
-    >>> print tickets
-    [[KTX] 8월 10일, 동대구~울산(09:26~09:54) => 5호 4A, 13900원]
-
-"""
+        """Get list of tickets"""
         url = KORAIL_MYTICKETLIST
         data = {
             'Device'         : self._device,
@@ -636,35 +593,7 @@ You can get the list of paid tickes with `tickets` method.
                     try: info[i] = info[i].encode('utf-8')
                     except: pass
 
-                ticket = Ticket()
-                ticket.train_type      = info['h_trn_clsf_cd']
-                ticket.train_type_name = info['h_trn_clsf_nm']
-                ticket.train_no        = info['h_trn_no']
-
-                ticket.dep_name = info['h_dpt_rs_stn_nm']
-                ticket.dep_code = info['h_dpt_rs_stn_cd']
-                ticket.dep_date = info['h_dpt_dt']
-                ticket.dep_time = info['h_dpt_tm']
-
-                ticket.arr_name = info['h_arv_rs_stn_nm']
-                ticket.arr_code = info['h_arv_rs_stn_cd']
-                ticket.arr_date = info['h_arv_dt']
-                ticket.arr_time = info['h_arv_tm']
-
-                ticket.car_no        = info['h_srcar_no']
-                ticket.seat_no       = info['h_seat_no']
-                ticket.seat_no_end   = info['h_seat_no_end']
-                ticket.seat_no_count = int(info['h_seat_cnt'])
-
-                ticket.buyer_name = info['h_buy_ps_nm']
-                ticket.sale_date  = info['h_orgtk_sale_dt']
-                ticket.sale_info1 = info['h_orgtk_wct_no']
-                ticket.sale_info2 = info['h_orgtk_ret_sale_dt']
-                ticket.sale_info3 = info['h_orgtk_sale_sqno']
-                ticket.sale_info4 = info['h_orgtk_ret_pwd']
-                ticket.price      = int(info['h_rcvd_amt'])
-
-                tickets.append(ticket)
+                tickets.append(Ticket(info))
 
             return tickets
 
@@ -688,32 +617,24 @@ You can get the list of paid tickes with `tickets` method.
                     try: info[i] = info[i].encode('utf-8')
                     except: pass
 
-                rsv = Reservation()
-                rsv.train_type      = info['h_trn_clsf_cd']
-                rsv.train_type_name = info['h_trn_clsf_nm']
-                rsv.train_no        = info['h_trn_no']
-
-                rsv.dep_name = info['h_dpt_rs_stn_nm']
-                rsv.dep_code = info['h_dpt_rs_stn_cd']
-                rsv.dep_date = info['h_run_dt']
-                rsv.dep_time = info['h_dpt_tm']
-
-                rsv.arr_name = info['h_arv_rs_stn_nm']
-                rsv.arr_code = info['h_arv_rs_stn_cd']
-                rsv.arr_date = info['h_run_dt']
-                rsv.arr_time = info['h_arv_tm']
-
-                rsv.rsv_id         = info['h_pnr_no']
-                rsv.seat_no_count  = int(info['h_tot_seat_cnt'])
-                rsv.buy_limit_date = info['h_ntisu_lmt_dt']
-                rsv.buy_limit_time = info['h_ntisu_lmt_tm']
-                rsv.price          = int(info['h_rsv_amt'])
-
-                reserves.append(rsv)
+                reserves.append(Reservation(info))
 
             return reserves
 
-    def cancel(self, rsv_id):
+    def cancel(self, rsv):
         """ Cancel Reservation : Canceling is for reservation, for ticket would be Refunding """
+        assert isinstance(rsv, Reservation)
         url = KORAIL_CANCEL
-        pass
+        data = {
+            'Device'         : self._device,
+            'Version'        : self._version,
+            'Key'            : self._key,
+            'txtPnrNo'       : rsv.rsv_id,
+            'txtJrnySqno'    : rsv.journey_no,
+            'txtJrnyCnt'     : rsv.journey_cnt,
+            'hidRsvChgNo'    : rsv.hidRsvChgNo,
+        }
+        r = self._session.post(url, data=data)
+        j = json.loads(r.text)
+        if self._result_check(j):
+            return True
