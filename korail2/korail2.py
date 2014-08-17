@@ -272,7 +272,7 @@ class Reservation(Train):
     journey_cnt = None # txtJrnyCnt
 
     #: 예약변경 번호?
-    rsv_chg_no = None
+    rsv_chg_no = "00000"
 
     #: 자리 갯수
     seat_no_count = None # h_tot_seat_cnt  ex) 001
@@ -286,12 +286,10 @@ class Reservation(Train):
     #: 예약 가격
     price = None # h_rsv_amt  ex) 00013900
 
-    #: ? - 취소시 필요
-    hidRsvChgNo = "00000"
-
     def __init__(self, data):
         super(Reservation, self).__init__(data)
 
+        # 이 두 필드가 결과에 빠져있음
         self.dep_date = data.get('h_run_dt')
         self.arr_date = data.get('h_run_dt')
 
@@ -632,7 +630,7 @@ class Korail(object):
             'txtPnrNo'       : rsv.rsv_id,
             'txtJrnySqno'    : rsv.journey_no,
             'txtJrnyCnt'     : rsv.journey_cnt,
-            'hidRsvChgNo'    : rsv.hidRsvChgNo,
+            'hidRsvChgNo'    : rsv.rsv_chg_no,
         }
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
