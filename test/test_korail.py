@@ -57,13 +57,17 @@ class TestKorail(TestCase):
         self.skipTest("Not implemented")
 
     def test_reservations(self):
+        from korail2.korail2 import KorailError, NoResultsError
+        self.assertIn("P100",NoResultsError)
+
         try:
             reserves = self.korail.reservations()
             self.assertIsNotNone(reserves, "get reservation list")
 
             print reserves
         except Exception, e:
-            self.skipTest(e.message)
+            print e
+            # self.skipTest(e.message)
 
     def test_cancel(self):
         # self.skipTest("Not implemented")

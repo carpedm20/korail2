@@ -336,6 +336,35 @@ class Seat(Schedule):
                                 self.sale_info4)
 
 
+class KorailError(Exception):
+    codes = set()
+
+    class __metaclass__(type):
+        def __contains__(cls, item):
+            return item in cls.codes
+
+    def __init__(self, msg, code):
+        self.msg = msg
+        self.code = code
+
+    def __str__(self):
+        return "%s (%s)" % (self.msg, self.code)
+
+
+class LoginError(KorailError):
+    codes = {'P058'}
+
+    def __init__(self, code=None):
+        super(LoginError, self).__init__("Need to Login", code)
+
+
+class NoResultsError(KorailError):
+    codes = {'P100'}
+
+    def __init__(self, code=None):
+        super(NoResultsError, self).__init__("No Results", code)
+
+
 class Korail(object):
     """Korail object"""
     _session = requests.session()
@@ -423,7 +452,11 @@ class Korail(object):
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')
             h_msg_txt = j['h_msg_txt'].encode('utf-8')
             # P058 : 로그인 필요
-            raise Exception("%s (%s)" % (h_msg_txt, h_msg_cd))
+            matched_error = filter(lambda x: h_msg_cd in x, (NoResultsError, LoginError))
+            if matched_error:
+                raise matched_error[0](h_msg_cd)
+            else:
+                raise KorailError(h_msg_txt, h_msg_cd)
         else:
             return True
 
@@ -614,11 +647,8 @@ class Korail(object):
                     print info
                     reserves.append(Reservation(info))
                 return reserves
-        except Exception, e:
-            if "(P100)" in e.message:
-                return []
-            else:
-                raise e
+        except NoResultsError, e:
+            return []
 
     def cancel(self, rsv):
         """ Cancel Reservation : Canceling is for reservation, for ticket would be Refunding """
