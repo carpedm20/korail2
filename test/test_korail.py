@@ -47,7 +47,7 @@ class TestKorail(TestCase):
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
 
     def test_reserve(self):
-        self.skipTest("Not implemented")
+        self.skipTest("Same to test_cancel")
 
     def test_tickets(self):
         self.skipTest("Not implemented")
