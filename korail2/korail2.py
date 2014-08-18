@@ -92,7 +92,7 @@ class Schedule(object):
     #: 도착 시각 (hhmmss)
     arr_time = None # h_arv_tm
 
-    #: ???? 시각 (yyyyMMdd)
+    #: 운행 날짜 (yyyyMMdd)
     run_date = None # h_run_dt
 
     def __init__(self, data):
@@ -112,7 +112,6 @@ class Schedule(object):
         self.arr_time = data.get('h_arv_tm')
 
         self.run_date = data.get('h_run_dt')
-
 
     def __repr__(self):
         dep_time = "%s:%s" % (self.dep_time[:2], self.dep_time[2:4])
@@ -245,10 +244,7 @@ class Ticket(Train):
         return repr_str
 
     def get_ticket_no(self):
-        return "%s-%s-%s-%s" % (self.sale_info1,
-                                self.sale_info2,
-                                self.sale_info3,
-                                self.sale_info4)
+        return "-".join(map(str, (self.sale_info1, self.sale_info2, self.sale_info3, self.sale_info4)))
 
 
 class Reservation(Train):
@@ -278,6 +274,15 @@ class Reservation(Train):
     #: 예약 가격
     price = None # h_rsv_amt  ex) 00013900
 
+    #: 열차 번호 (Not implemented)
+    car_no = None # h_srcar_no
+
+    #: 자리 번호 (Not implemented)
+    seat_no = None # h_seat_no
+
+    #: 자리 번호 (Not implemented)
+    seat_no_end = None # h_seat_no_end
+
     def __init__(self, data):
         super(Reservation, self).__init__(data)
         # 이 두 필드가 결과에 빠져있음
@@ -294,6 +299,9 @@ class Reservation(Train):
         self.rsv_chg_no     = data.get('hidRsvChgNo', "00000")
 
         # 좌석정보 추가 업데이트 필요.
+        # self.car_no = None
+        # self.seat_no = None
+        # self.seat_no_end = None
 
     def __repr__(self):
         repr_str = super(Reservation, self).__repr__()
@@ -308,32 +316,6 @@ class Reservation(Train):
         repr_str += ", 구입기한 %s %s" % (buy_limit_date, buy_limit_time)
 
         return repr_str
-
-class Seat(Schedule):
-    """Ticket object"""
-    #: Schedule
-    schedule = None
-
-    #: 열차 번호
-    car_no = None # h_srcar_no
-
-    #: 자리 번호
-    seat_no = None # h_seat_no
-
-    #: 자리 갯수
-    seat_no_count = None # h_seat_cnt  ex) 001
-
-    def __repr__(self):
-        repr_str = self.schedule.__repr__()
-        repr_str += " %s호 %s" % (self.car_no, self.seat_no)
-
-        return repr_str
-
-    def get_ticket_no(self):
-        return "%s-%s-%s-%s" % (self.sale_info1,
-                                self.sale_info2,
-                                self.sale_info3,
-                                self.sale_info4)
 
 
 class KorailError(Exception):
