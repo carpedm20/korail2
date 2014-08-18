@@ -46,6 +46,10 @@ class TestKorail(TestCase):
         trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
 
+    def test_search_train_many(self):
+        tomorrow = date.today() + timedelta(days=1)
+        trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000", adult=9)
+
     def test_reserve(self):
         self.skipTest("Same to test_cancel")
 
@@ -86,4 +90,4 @@ class TestKorail(TestCase):
     def test_cancel_all(self):
         for rsv in self.korail.reservations():
             res = self.korail.cancel(rsv)
-            print repr(rsv)+"\n"+str(res)
+            print repr(rsv) + "\n" + str(res)

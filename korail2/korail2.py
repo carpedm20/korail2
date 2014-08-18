@@ -164,24 +164,16 @@ class Train(Schedule):
         self.general_seat = data.get('h_gen_rsv_cd')
 
     def __repr__(self):
-        repr_str = super(Train, self).__repr__() + " "
-
-        if self.special_seat != '00':
-            if  self.special_seat == '11':
-                special_seat = True
-            else:
-                special_seat = False
-            repr_str += '[특실:%d]' % special_seat
-
-        if self.general_seat != '00':
-            if  self.general_seat == '11':
-                general_seat = True
-            else:
-                general_seat = False
-            repr_str += '[일반실:%d]' % general_seat
+        repr_str = super(Train, self).__repr__()
 
         if self.reserve_possible_name is not None:
-            repr_str +=  " " + self.reserve_possible_name.replace('\n',' ')
+            seats = []
+            if self.special_seat == '11':
+                seats.append("특실")
+
+            if self.general_seat == '11':
+                seats.append("일반실")
+            repr_str += " "+ (",".join(seats)) + " " + self.reserve_possible_name.replace('\n',' ')
 
         return repr_str
 
@@ -288,7 +280,6 @@ class Reservation(Train):
 
     def __init__(self, data):
         super(Reservation, self).__init__(data)
-
         # 이 두 필드가 결과에 빠져있음
         self.dep_date = data.get('h_run_dt')
         self.arr_date = data.get('h_run_dt')
@@ -302,10 +293,12 @@ class Reservation(Train):
         self.journey_cnt    = data.get('txtJrnyCnt', "01")
         self.rsv_chg_no     = data.get('hidRsvChgNo', "00000")
 
+        # 좌석정보 추가 업데이트 필요.
+
     def __repr__(self):
         repr_str = super(Reservation, self).__repr__()
 
-        repr_str += ", %s원" % self.price
+        repr_str += ", %s원(%s석)" % (self.price, self.seat_no_count)
 
         buy_limit_time = "%s:%s" % (self.buy_limit_time[:2], self.buy_limit_time[2:4])
 
@@ -564,7 +557,7 @@ class Korail(object):
             rsvlist = filter(lambda x:x.rsv_id == rsv_id, self.reservations())
             if len(rsvlist) == 1:
                 return rsvlist[0]
-    
+
     def tickets(self):
         """Get list of tickets"""
         url = KORAIL_MYTICKETLIST
