@@ -92,12 +92,20 @@ You can get your tickes with `tickets` method.
 
     >>> trains = korail.search_train(dep, arr, date, time)
     >>> seat = korail.reserve(trains[0])
-    정상처리되었습니다
-    동일시간대 예약발매내역이 있습니다.
     >>> seat
-    [KTX] 8월 3일, 서울~부산(11:00~:) 16호 6A
+    [KTX] 8월 23일, 서울~동대구(15:30~17:19) [특실:0][일반실:0], 42500원, 구입기한 8월 18일 14:05
 
-### 4. Get tickets already paid ###
+### 4. View reservations ####
+
+You can get your tickes with `tickets` method.
+
+    >>> reservations = korail.reservations()
+    >>> reservations
+    [[KTX] 8월 23일, 서울~동대구(14:55~16:45) [특실:0][일반실:0], 42500원, 구입기한 8월 18일 14:03,
+     [무궁화호] 8월 23일, 서울~동대구(15:03~18:48) [특실:0][일반실:0], 21100원, 구입기한 8월 18일 14:03,
+     [KTX] 8월 23일, 서울~동대구(15:30~17:19) [특실:0][일반실:0], 42500원, 구입기한 8월 18일 14:05]
+
+### 5. Get tickets already paid ###
 
 You can see your ticket list with `tickets` method.
 You can get the list of paid tickes with `tickets` method.

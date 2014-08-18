@@ -618,6 +618,7 @@ class Korail(object):
                     for i in info:
                         try: info[i] = info[i].encode('utf-8')
                         except: pass
+                    print info
                     reserves.append(Reservation(info))
                 return reserves
         except Exception, e:
