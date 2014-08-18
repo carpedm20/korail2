@@ -337,6 +337,7 @@ class Seat(Schedule):
 
 
 class KorailError(Exception):
+    """Korail Base Error Class"""
     codes = set()
 
     class __metaclass__(type):
@@ -351,14 +352,16 @@ class KorailError(Exception):
         return "%s (%s)" % (self.msg, self.code)
 
 
-class LoginError(KorailError):
+class NeedToLoginError(KorailError):
+    """Korail NeedToLogin Error Class"""
     codes = {'P058'}
 
     def __init__(self, code=None):
-        super(LoginError, self).__init__("Need to Login", code)
+        super(NeedToLoginError, self).__init__("Need to Login", code)
 
 
 class NoResultsError(KorailError):
+    """Korail NoResults Error Class"""
     codes = {'P100'}
 
     def __init__(self, code=None):
@@ -452,7 +455,7 @@ class Korail(object):
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')
             h_msg_txt = j['h_msg_txt'].encode('utf-8')
             # P058 : 로그인 필요
-            matched_error = filter(lambda x: h_msg_cd in x, (NoResultsError, LoginError))
+            matched_error = filter(lambda x: h_msg_cd in x, (NoResultsError, NeedToLoginError))
             if matched_error:
                 raise matched_error[0](h_msg_cd)
             else:

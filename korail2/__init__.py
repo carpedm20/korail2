@@ -9,7 +9,7 @@
     :license: BSD, see LICENSE for more details.
 """
 from .korail2 import Korail
-from .korail2 import KorailError, LoginError, NoResultsError
+from .korail2 import KorailError, NeedToLoginError, NoResultsError
 
 __version__ = '0.0.5'
-__all__ = ['Korail', 'KorailError', 'LoginError', 'NoResultsError']
+__all__ = ['Korail', 'KorailError', 'NeedToLoginError', 'NoResultsError']

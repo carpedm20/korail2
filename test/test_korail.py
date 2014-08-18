@@ -70,7 +70,7 @@ class TestKorail(TestCase):
 
         try:
             self.korail._result_check({"strResult": "FAIL", "h_msg_cd": "P058", "h_msg_txt": "UNKNOWN"})
-        except LoginError:
+        except NeedToLoginError:
             self.assertTrue(True)
         except KorailError:
             self.assertTrue(False)
