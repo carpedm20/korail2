@@ -3,6 +3,7 @@ from unittest import TestCase
 import os.path
 from datetime import date, datetime, timedelta
 from korail2 import Korail
+import korail2
 
 __author__ = 'sng2c'
 
@@ -55,6 +56,7 @@ class TestKorail(TestCase):
         try:
             reserves = self.korail.reservations()
             self.assertIsNotNone(reserves, "get reservation list")
+
             print reserves
         except Exception, e:
             self.skipTest(e.message)
@@ -71,10 +73,17 @@ class TestKorail(TestCase):
             rsvlist = self.korail.reservations()
             matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
             self.assertEqual(len(matched), 1, "make a reservation")
+            print matched
 
-            self.korail.cancel(rsv.rsv_id)
+            self.korail.cancel(rsv)
             rsvlist = self.korail.reservations()
             matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+            print matched
             self.assertEqual(len(matched), 0, "cancel the reservation")
         else:
             self.skipTest("No Empty Seats tomorrow.")
+
+    def test_cancel_all(self):
+        for rsv in self.korail.reservations():
+            res = self.korail.cancel(rsv)
+            print repr(rsv)+"\n"+str(res)

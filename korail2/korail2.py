@@ -33,7 +33,7 @@ KORAIL_REFUND            = "%s.refunds.RefundsRequest" % KORAIL_MOBILE
 KORAIL_MYTICKETLIST      = "%s.myTicket.MyTicketList" % KORAIL_MOBILE
 
 KORAIL_MYRESERVATIONLIST = "%s.reservation.ReservationView" % KORAIL_MOBILE
-KORAIL_CANCEL            = "%s.reservationCancel.ReservationCancel" % KORAIL_MOBILE
+KORAIL_CANCEL            = "%s.reservationCancel.ReservationCancelChk" % KORAIL_MOBILE
 
 KORAIL_STATION_DB       = "%s.common.stationinfo?device=ip" % KORAIL_MOBILE
 KORAIL_STATION_DB_DATA  = "%s.common.stationdata" % KORAIL_MOBILE
@@ -298,8 +298,9 @@ class Reservation(Train):
         self.buy_limit_date = data.get('h_ntisu_lmt_dt')
         self.buy_limit_time = data.get('h_ntisu_lmt_tm')
         self.price          = int(data.get('h_rsv_amt'))
-        self.journey_no     = data.get('txtJrnySqno')
-        self.journey_cnt    = data.get('txtJrnyCnt')
+        self.journey_no     = data.get('txtJrnySqno', "001")
+        self.journey_cnt    = data.get('txtJrnyCnt', "01")
+        self.rsv_chg_no     = data.get('hidRsvChgNo', "00000")
 
     def __repr__(self):
         repr_str = super(Reservation, self).__repr__()
@@ -586,6 +587,8 @@ class Korail(object):
 
             tickets = []
 
+            # http://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str
+            # 위 코드 검증후 일괄 적용
             for info in ticket_infos:
                 for i in info:
                     try: info[i] = info[i].encode('utf-8')
@@ -605,19 +608,25 @@ class Korail(object):
         }
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
-        if self._result_check(j):
-            rsv_infos = j['jrny_infos']['jrny_info']
+        try:
+            if self._result_check(j):
+                rsv_infos = j['jrny_infos']['jrny_info']
 
-            reserves = []
+                reserves = []
 
-            for info in rsv_infos:
-                for i in info:
-                    try: info[i] = info[i].encode('utf-8')
-                    except: pass
+                for info in rsv_infos:
+                    for i in info:
+                        try: info[i] = info[i].encode('utf-8')
+                        except: pass
 
-                reserves.append(Reservation(info))
+                    reserves.append(Reservation(info))
 
-            return reserves
+                return reserves
+        except Exception, e:
+            if "(P100)" in e.message:
+                return []
+            else:
+                raise e
 
     def cancel(self, rsv):
         """ Cancel Reservation : Canceling is for reservation, for ticket would be Refunding """
