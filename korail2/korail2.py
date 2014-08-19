@@ -249,6 +249,51 @@ class Ticket(Train):
         return "-".join(map(str, (self.sale_info1, self.sale_info2, self.sale_info3, self.sale_info4)))
 
 
+class Passenger:
+    """승객. Passenger List를 검색과 예약에 쓰도록 한다."""
+    typecode = None           # txtPsgTpCd1    : '1',   #손님 종류 (어른 1, 어린이 3)
+    discount_type = '000'  # txtDiscKndCd1  : '000', #할인 타입 (경로, 동반유아, 군장병 등..)
+    count = 1          # txtCompaCnt1   : '1',   #인원수
+    card = ''           # txtCardCode_1  : '',    #할인카드 종류
+    card_no = ''        # txtCardNo_1    : '',    #할인카드 번호
+    card_pw = ''        # txtCardPw_1    : '',    #할인카드 비밀번호
+
+    def __init__(self, typecode=None, count=1, discount_type='000', card='', card_no='', card_pw=''):
+        self.typecode = typecode
+        self.count = count
+        self.discount_type = discount_type
+        self.card = card
+        self.card_no = card_no
+        self.card_pw = card_pw
+
+    def get_dict(self, index):
+        assert isinstance(index,int)
+        index = str(index)
+        return {
+            'txtPsgTpCd'+index: self.typecode,
+            'txtDiscKndCd'+index: self.discount_type,
+            'txtCompaCnt'+index: self.count,
+            'txtCardCode_'+index: self.card,
+            'txtCardNo_'+index: self.card_no,
+            'txtCardPw_'+index: self.card_pw,
+        }
+
+
+class AdultPassenger(Passenger):
+    def __init__(self, count=1, discount_type='000', card='', card_no='', card_pw=''):
+        Passenger.__init__(self, '1', count, discount_type, card, card_no, card_pw)
+
+
+class ChildPassenger(Passenger):
+    def __init__(self, count=1, discount_type='000', card='', card_no='', card_pw=''):
+        Passenger.__init__(self, '3', count, discount_type, card, card_no, card_pw)
+
+
+class SeniorPassenger(Passenger):
+    def __init__(self, count=1, discount_type='P41', card='', card_no='', card_pw=''):
+        Passenger.__init__(self, '1', count, discount_type, card, card_no, card_pw)
+
+
 class Reservation(Train):
     """Revervation object"""
 
@@ -341,7 +386,7 @@ class NeedToLoginError(KorailError):
     codes = {'P058'}
 
     def __init__(self, code=None):
-        super(NeedToLoginError, self).__init__("Need to Login", code)
+        KorailError.__init__(self, "Need to Login", code)
 
 
 class NoResultsError(KorailError):
@@ -349,8 +394,13 @@ class NoResultsError(KorailError):
     codes = {'P100'}
 
     def __init__(self, code=None):
-        super(NoResultsError, self).__init__("No Results", code)
+        KorailError.__init__(self, "No Results", code)
 
+class SoldOutError(KorailError):
+    codes = {'ERR211161'}
+
+    def __init__(self, code=None):
+        KorailError.__init__(self, "Sold out", code)
 
 class Korail(object):
     """Korail object"""
@@ -439,7 +489,7 @@ class Korail(object):
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')
             h_msg_txt = j['h_msg_txt'].encode('utf-8')
             # P058 : 로그인 필요
-            matched_error = filter(lambda x: h_msg_cd in x, (NoResultsError, NeedToLoginError))
+            matched_error = filter(lambda x: h_msg_cd in x, (NoResultsError, NeedToLoginError, SoldOutError))
             if matched_error:
                 raise matched_error[0](h_msg_cd)
             else:
@@ -448,7 +498,7 @@ class Korail(object):
             return True
 
     def search_train(self, dep, arr, date=None, time=None, train_type='05',
-                     adult=1):
+                     passengers=None):
         """Search trains for specific time and date.
 
 :param dep: A departure station in Korean  ex) '서울'
@@ -467,10 +517,16 @@ class Korail(object):
                    - 08: ITX-새마을
                    - 09: ITX-청춘
 """
-        if date == None:
+        if date is None:
             date = datetime.now().strftime("%Y%m%d")
-        if time == None:
+        if time is None:
             time = datetime.now().strftime("%H%M%S")
+
+        if passengers is None:
+            passengers = [AdultPassenger()]
+
+        adult_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, AdultPassenger), passengers), 0)
+        child_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, ChildPassenger), passengers), 0)
 
         url  = KORAIL_SEARCH_SCHEDULE
         data = {
@@ -484,11 +540,11 @@ class Korail(object):
             'txtGoStart'     : dep,
             'txtGoEnd'       : arr,
             'txtGoHour'      : time, #'071500',
-            'txtPsgFlg_1'    : str(adult),  #일반인
-            'txtPsgFlg_2'    : '0',
-            'txtPsgFlg_3'    : '0',
-            'txtPsgFlg_4'    : '0',
-            'txtPsgFlg_5'    : '0',
+            'txtPsgFlg_1'    : adult_count,  # 어른
+            'txtPsgFlg_2'    : child_count,  # 어린이
+            'txtPsgFlg_3'    : '0',  # 경로
+            'txtPsgFlg_4'    : '0',  # 장애인1
+            'txtPsgFlg_5'    : '0',  # 장애인2
             'txtCardPsgCnt'  : '0',
             'txtSeatAttCd_2' : '00',
             'txtSeatAttCd_3' : '00',
@@ -515,12 +571,14 @@ class Korail(object):
 
             return trains
 
-    def reserve(self, train):
+    def reserve(self, train, passengers=None):
         """Reserve a train.
 
 :param train: An instance of `Train`.
         """
         # train : 예약을 위한 차량의 필수 정보를 가진 모든 객체를 이용할 수 있어야 한다.
+        if passengers is None:
+            passengers = (AdultPassenger(),)
 
         url = KORAIL_TICKETRESERVATION
         data = {
@@ -567,17 +625,22 @@ class Korail(object):
             'txtChgFlg2'     : '',
 
             # 이하 txtTotPsgCnt 만큼 반복
-            'txtPsgTpCd1'    : '1',   #손님 종류 (어른, 어린이)
-            'txtDiscKndCd1'  : '000', #할인 타입 (경로, 동반유아, 군장병 등..)
-            'txtCompaCnt1'   : '1',   #인원수
-            'txtCardCode_1'  : '',
-            'txtCardNo_1'    : '',
-            'txtCardPw_1'    : '',
+            # 'txtPsgTpCd1'    : '1',   #손님 종류 (어른, 어린이)
+            # 'txtDiscKndCd1'  : '000', #할인 타입 (경로, 동반유아, 군장병 등..)
+            # 'txtCompaCnt1'   : '1',   #인원수
+            # 'txtCardCode_1'  : '',
+            # 'txtCardNo_1'    : '',
+            # 'txtCardPw_1'    : '',
         }
+
+        index = 1
+        for psg in passengers:
+            d = psg.get_dict(index)
+            data.update(d)
+            index += 1
 
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
-
         if self._result_check(j):
             rsv_id = j['h_pnr_no']
             rsvlist = filter(lambda x:x.rsv_id == rsv_id, self.reservations())

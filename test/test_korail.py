@@ -81,6 +81,7 @@ class TestKorail(TestCase):
         tomorrow = date.today() + timedelta(days=1)
         trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
+        print trains
 
     # def test_reserve(self):
     #     self.skipTest("Same to test_cancel")
@@ -118,6 +119,33 @@ class TestKorail(TestCase):
             rsvlist = self.korail.reservations()
             matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
             self.assertEqual(len(matched), 0, "cancel the reservation")
+        else:
+            self.skipTest("No Empty Seats tomorrow.")
+
+    def test_reserve_and_cancel_multi(self):
+        # self.skipTest("Not implemented")
+        tomorrow = date.today() + timedelta(days=1)
+        passengers = (
+            AdultPassenger(1),
+            ChildPassenger(1),
+            SeniorPassenger(1),
+        )
+        trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000", passengers=passengers)
+        print trains
+        empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
+        if len(empty_seats) > 0:
+            try:
+                rsv = self.korail.reserve(empty_seats[0],passengers=passengers)
+                rsvlist = self.korail.reservations()
+                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                self.assertEqual(len(matched), 1, "make a reservation")
+
+                self.korail.cancel(rsv)
+                rsvlist = self.korail.reservations()
+                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                self.assertEqual(len(matched), 0, "cancel the reservation")
+            except SoldOutError:
+                self.skipTest("Sold Out");
         else:
             self.skipTest("No Empty Seats tomorrow.")
 
