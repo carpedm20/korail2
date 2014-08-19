@@ -10,6 +10,8 @@
 import re
 import requests
 from datetime import datetime
+from contants import *
+
 try:
     import simplejson as json
 except ImportError:
@@ -92,7 +94,7 @@ class Schedule(object):
     #: 도착 시각 (hhmmss)
     arr_time = None # h_arv_tm
 
-    #: ???? 시각 (yyyyMMdd)
+    #: 운행 날짜 (yyyyMMdd)
     run_date = None # h_run_dt
 
     def __init__(self, data):
@@ -112,7 +114,6 @@ class Schedule(object):
         self.arr_time = data.get('h_arv_tm')
 
         self.run_date = data.get('h_run_dt')
-
 
     def __repr__(self):
         dep_time = "%s:%s" % (self.dep_time[:2], self.dep_time[2:4])
@@ -164,24 +165,16 @@ class Train(Schedule):
         self.general_seat = data.get('h_gen_rsv_cd')
 
     def __repr__(self):
-        repr_str = super(Train, self).__repr__() + " "
-
-        if self.special_seat != '00':
-            if  self.special_seat == '11':
-                special_seat = True
-            else:
-                special_seat = False
-            repr_str += '[특실:%d]' % special_seat
-
-        if self.general_seat != '00':
-            if  self.general_seat == '11':
-                general_seat = True
-            else:
-                general_seat = False
-            repr_str += '[일반실:%d]' % general_seat
+        repr_str = super(Train, self).__repr__()
 
         if self.reserve_possible_name is not None:
-            repr_str +=  " " + self.reserve_possible_name.replace('\n',' ')
+            seats = []
+            if self.special_seat == '11':
+                seats.append("특실")
+
+            if self.general_seat == '11':
+                seats.append("일반실")
+            repr_str += " "+ (",".join(seats)) + " " + self.reserve_possible_name.replace('\n',' ')
 
         return repr_str
 
@@ -253,10 +246,52 @@ class Ticket(Train):
         return repr_str
 
     def get_ticket_no(self):
-        return "%s-%s-%s-%s" % (self.sale_info1,
-                                self.sale_info2,
-                                self.sale_info3,
-                                self.sale_info4)
+        return "-".join(map(str, (self.sale_info1, self.sale_info2, self.sale_info3, self.sale_info4)))
+
+
+class Passenger:
+    """승객. Passenger List를 검색과 예약에 쓰도록 한다."""
+    typecode = None           # txtPsgTpCd1    : '1',   #손님 종류 (어른 1, 어린이 3)
+    discount_type = '000'  # txtDiscKndCd1  : '000', #할인 타입 (경로, 동반유아, 군장병 등..)
+    count = 1          # txtCompaCnt1   : '1',   #인원수
+    card = ''           # txtCardCode_1  : '',    #할인카드 종류
+    card_no = ''        # txtCardNo_1    : '',    #할인카드 번호
+    card_pw = ''        # txtCardPw_1    : '',    #할인카드 비밀번호
+
+    def __init__(self, typecode=None, count=1, discount_type='000', card='', card_no='', card_pw=''):
+        self.typecode = typecode
+        self.count = count
+        self.discount_type = discount_type
+        self.card = card
+        self.card_no = card_no
+        self.card_pw = card_pw
+
+    def get_dict(self, index):
+        assert isinstance(index,int)
+        index = str(index)
+        return {
+            'txtPsgTpCd'+index: self.typecode,
+            'txtDiscKndCd'+index: self.discount_type,
+            'txtCompaCnt'+index: self.count,
+            'txtCardCode_'+index: self.card,
+            'txtCardNo_'+index: self.card_no,
+            'txtCardPw_'+index: self.card_pw,
+        }
+
+
+class AdultPassenger(Passenger):
+    def __init__(self, count=1, discount_type='000', card='', card_no='', card_pw=''):
+        Passenger.__init__(self, '1', count, discount_type, card, card_no, card_pw)
+
+
+class ChildPassenger(Passenger):
+    def __init__(self, count=1, discount_type='000', card='', card_no='', card_pw=''):
+        Passenger.__init__(self, '3', count, discount_type, card, card_no, card_pw)
+
+
+class SeniorPassenger(Passenger):
+    def __init__(self, count=1, discount_type='P41', card='', card_no='', card_pw=''):
+        Passenger.__init__(self, '1', count, discount_type, card, card_no, card_pw)
 
 
 class Reservation(Train):
@@ -286,9 +321,17 @@ class Reservation(Train):
     #: 예약 가격
     price = None # h_rsv_amt  ex) 00013900
 
+    #: 열차 번호 (Not implemented)
+    car_no = None # h_srcar_no
+
+    #: 자리 번호 (Not implemented)
+    seat_no = None # h_seat_no
+
+    #: 자리 번호 (Not implemented)
+    seat_no_end = None # h_seat_no_end
+
     def __init__(self, data):
         super(Reservation, self).__init__(data)
-
         # 이 두 필드가 결과에 빠져있음
         self.dep_date = data.get('h_run_dt')
         self.arr_date = data.get('h_run_dt')
@@ -302,10 +345,15 @@ class Reservation(Train):
         self.journey_cnt    = data.get('txtJrnyCnt', "01")
         self.rsv_chg_no     = data.get('hidRsvChgNo', "00000")
 
+        # 좌석정보 추가 업데이트 필요.
+        # self.car_no = None
+        # self.seat_no = None
+        # self.seat_no_end = None
+
     def __repr__(self):
         repr_str = super(Reservation, self).__repr__()
 
-        repr_str += ", %s원" % self.price
+        repr_str += ", %s원(%s석)" % (self.price, self.seat_no_count)
 
         buy_limit_time = "%s:%s" % (self.buy_limit_time[:2], self.buy_limit_time[2:4])
 
@@ -316,32 +364,43 @@ class Reservation(Train):
 
         return repr_str
 
-class Seat(Schedule):
-    """Ticket object"""
-    #: Schedule
-    schedule = None
 
-    #: 열차 번호
-    car_no = None # h_srcar_no
+class KorailError(Exception):
+    """Korail Base Error Class"""
+    codes = set()
 
-    #: 자리 번호
-    seat_no = None # h_seat_no
+    class __metaclass__(type):
+        def __contains__(cls, item):
+            return item in cls.codes
 
-    #: 자리 갯수
-    seat_no_count = None # h_seat_cnt  ex) 001
+    def __init__(self, msg, code):
+        self.msg = msg
+        self.code = code
 
-    def __repr__(self):
-        repr_str = self.schedule.__repr__()
-        repr_str += " %s호 %s" % (self.car_no, self.seat_no)
+    def __str__(self):
+        return "%s (%s)" % (self.msg, self.code)
 
-        return repr_str
 
-    def get_ticket_no(self):
-        return "%s-%s-%s-%s" % (self.sale_info1,
-                                self.sale_info2,
-                                self.sale_info3,
-                                self.sale_info4)
+class NeedToLoginError(KorailError):
+    """Korail NeedToLogin Error Class"""
+    codes = {'P058'}
 
+    def __init__(self, code=None):
+        KorailError.__init__(self, "Need to Login", code)
+
+
+class NoResultsError(KorailError):
+    """Korail NoResults Error Class"""
+    codes = {'P100'}
+
+    def __init__(self, code=None):
+        KorailError.__init__(self, "No Results", code)
+
+class SoldOutError(KorailError):
+    codes = {'ERR211161'}
+
+    def __init__(self, code=None):
+        KorailError.__init__(self, "Sold out", code)
 
 class Korail(object):
     """Korail object"""
@@ -430,12 +489,16 @@ class Korail(object):
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')
             h_msg_txt = j['h_msg_txt'].encode('utf-8')
             # P058 : 로그인 필요
-            raise Exception("%s (%s)" % (h_msg_txt, h_msg_cd))
+            matched_error = filter(lambda x: h_msg_cd in x, (NoResultsError, NeedToLoginError, SoldOutError))
+            if matched_error:
+                raise matched_error[0](h_msg_cd)
+            else:
+                raise KorailError(h_msg_txt, h_msg_cd)
         else:
             return True
 
     def search_train(self, dep, arr, date=None, time=None, train_type='05',
-                     adult=1):
+                     passengers=None):
         """Search trains for specific time and date.
 
 :param dep: A departure station in Korean  ex) '서울'
@@ -454,10 +517,17 @@ class Korail(object):
                    - 08: ITX-새마을
                    - 09: ITX-청춘
 """
-        if date == None:
+        if date is None:
             date = datetime.now().strftime("%Y%m%d")
-        if time == None:
+        if time is None:
             time = datetime.now().strftime("%H%M%S")
+
+        if passengers is None:
+            passengers = [AdultPassenger()]
+
+        adult_count  = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, AdultPassenger), passengers), 0)
+        child_count  = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, ChildPassenger), passengers), 0)
+        senior_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, SeniorPassenger), passengers), 0)
 
         url  = KORAIL_SEARCH_SCHEDULE
         data = {
@@ -471,11 +541,11 @@ class Korail(object):
             'txtGoStart'     : dep,
             'txtGoEnd'       : arr,
             'txtGoHour'      : time, #'071500',
-            'txtPsgFlg_1'    : str(adult),  #일반인
-            'txtPsgFlg_2'    : '0',
-            'txtPsgFlg_3'    : '0',
-            'txtPsgFlg_4'    : '0',
-            'txtPsgFlg_5'    : '0',
+            'txtPsgFlg_1'    : adult_count,  # 어른
+            'txtPsgFlg_2'    : child_count,  # 어린이
+            'txtPsgFlg_3'    : senior_count, # 경로
+            'txtPsgFlg_4'    : '0',  # 장애인1
+            'txtPsgFlg_5'    : '0',  # 장애인2
             'txtCardPsgCnt'  : '0',
             'txtSeatAttCd_2' : '00',
             'txtSeatAttCd_3' : '00',
@@ -502,12 +572,14 @@ class Korail(object):
 
             return trains
 
-    def reserve(self, train):
+    def reserve(self, train, passengers=None):
         """Reserve a train.
 
 :param train: An instance of `Train`.
         """
         # train : 예약을 위한 차량의 필수 정보를 가진 모든 객체를 이용할 수 있어야 한다.
+        if passengers is None:
+            passengers = (AdultPassenger(),)
 
         url = KORAIL_TICKETRESERVATION
         data = {
@@ -526,12 +598,8 @@ class Korail(object):
             'txtMenuId'      : '11',
             'txtSrcarCnt'    : '0',
             'txtJrnyCnt'     : '1',
-            'txtPsgTpCd1'    : '1',
-            'txtDiscKndCd1'  : '000',
-            'txtCompaCnt1'   : '1',
-            'txtCardCode_1'  : '',
-            'txtCardNo_1'    : '',
-            'txtCardPw_1'    : '',
+
+            # 이하 여정정보1
             'txtJrnySqno1'   : '001',
             'txtJrnyTpCd1'   : '11',
             'txtDptDt1'      : train.dep_date,
@@ -543,6 +611,8 @@ class Korail(object):
             'txtTrnClsfCd1'  : train.train_type,
             'txtPsrmClCd1'   : '1',
             'txtChgFlg1'     : '',
+
+            # 이하 여정정보2
             'txtJrnySqno2'   : '',
             'txtJrnyTpCd2'   : '',
             'txtDptDt2'      : '',
@@ -554,17 +624,29 @@ class Korail(object):
             'txtTrnClsfCd2'  : '',
             'txtPsrmClCd2'   : '',
             'txtChgFlg2'     : '',
+
+            # 이하 txtTotPsgCnt 만큼 반복
+            # 'txtPsgTpCd1'    : '1',   #손님 종류 (어른, 어린이)
+            # 'txtDiscKndCd1'  : '000', #할인 타입 (경로, 동반유아, 군장병 등..)
+            # 'txtCompaCnt1'   : '1',   #인원수
+            # 'txtCardCode_1'  : '',
+            # 'txtCardNo_1'    : '',
+            # 'txtCardPw_1'    : '',
         }
+
+        index = 1
+        for psg in passengers:
+            data.update(psg.get_dict(index))
+            index += 1
 
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
-
         if self._result_check(j):
             rsv_id = j['h_pnr_no']
             rsvlist = filter(lambda x:x.rsv_id == rsv_id, self.reservations())
             if len(rsvlist) == 1:
                 return rsvlist[0]
-    
+
     def tickets(self):
         """Get list of tickets"""
         url = KORAIL_MYTICKETLIST
@@ -618,14 +700,10 @@ class Korail(object):
                     for i in info:
                         try: info[i] = info[i].encode('utf-8')
                         except: pass
-                    print info
                     reserves.append(Reservation(info))
                 return reserves
-        except Exception, e:
-            if "(P100)" in e.message:
-                return []
-            else:
-                raise e
+        except NoResultsError, e:
+            return []
 
     def cancel(self, rsv):
         """ Cancel Reservation : Canceling is for reservation, for ticket would be Refunding """
