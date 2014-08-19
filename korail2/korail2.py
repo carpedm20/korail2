@@ -10,6 +10,8 @@
 import re
 import requests
 from datetime import datetime
+from contants import *
+
 try:
     import simplejson as json
 except ImportError:
@@ -96,7 +98,7 @@ class Schedule(object):
     run_date = None # h_run_dt
 
     def __init__(self, data):
-        self.train_type      = data.get('h_trn_clsf_cd')
+        self.train_type      = enum_h_trn_clsf_cd[data.get('h_trn_clsf_cd')]
         self.train_type_name = data.get('h_trn_clsf_nm')
         self.train_no        = data.get('h_trn_no')
         self.delay_time      = data.get('h_expct_dlay_hr')
@@ -537,12 +539,8 @@ class Korail(object):
             'txtMenuId'      : '11',
             'txtSrcarCnt'    : '0',
             'txtJrnyCnt'     : '1',
-            'txtPsgTpCd1'    : '1',
-            'txtDiscKndCd1'  : '000',
-            'txtCompaCnt1'   : '1',
-            'txtCardCode_1'  : '',
-            'txtCardNo_1'    : '',
-            'txtCardPw_1'    : '',
+
+            # 이하 여정정보1
             'txtJrnySqno1'   : '001',
             'txtJrnyTpCd1'   : '11',
             'txtDptDt1'      : train.dep_date,
@@ -554,6 +552,8 @@ class Korail(object):
             'txtTrnClsfCd1'  : train.train_type,
             'txtPsrmClCd1'   : '1',
             'txtChgFlg1'     : '',
+
+            # 이하 여정정보2
             'txtJrnySqno2'   : '',
             'txtJrnyTpCd2'   : '',
             'txtDptDt2'      : '',
@@ -565,6 +565,14 @@ class Korail(object):
             'txtTrnClsfCd2'  : '',
             'txtPsrmClCd2'   : '',
             'txtChgFlg2'     : '',
+
+            # 이하 txtTotPsgCnt 만큼 반복
+            'txtPsgTpCd1'    : '1',   #손님 종류 (어른, 어린이)
+            'txtDiscKndCd1'  : '000', #할인 타입 (경로, 동반유아, 군장병 등..)
+            'txtCompaCnt1'   : '1',   #인원수
+            'txtCardCode_1'  : '',
+            'txtCardNo_1'    : '',
+            'txtCardPw_1'    : '',
         }
 
         r = self._session.post(url, data=data)
