@@ -98,7 +98,7 @@ class Schedule(object):
     run_date = None # h_run_dt
 
     def __init__(self, data):
-        self.train_type      = enum_h_trn_clsf_cd[data.get('h_trn_clsf_cd')]
+        self.train_type      = data.get('h_trn_clsf_cd')
         self.train_type_name = data.get('h_trn_clsf_nm')
         self.train_no        = data.get('h_trn_no')
         self.delay_time      = data.get('h_expct_dlay_hr')
