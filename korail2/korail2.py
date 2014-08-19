@@ -525,8 +525,9 @@ class Korail(object):
         if passengers is None:
             passengers = [AdultPassenger()]
 
-        adult_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, AdultPassenger), passengers), 0)
-        child_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, ChildPassenger), passengers), 0)
+        adult_count  = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, AdultPassenger), passengers), 0)
+        child_count  = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, ChildPassenger), passengers), 0)
+        senior_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, SeniorPassenger), passengers), 0)
 
         url  = KORAIL_SEARCH_SCHEDULE
         data = {
@@ -542,7 +543,7 @@ class Korail(object):
             'txtGoHour'      : time, #'071500',
             'txtPsgFlg_1'    : adult_count,  # 어른
             'txtPsgFlg_2'    : child_count,  # 어린이
-            'txtPsgFlg_3'    : '0',  # 경로
+            'txtPsgFlg_3'    : senior_count, # 경로
             'txtPsgFlg_4'    : '0',  # 장애인1
             'txtPsgFlg_5'    : '0',  # 장애인2
             'txtCardPsgCnt'  : '0',
@@ -635,8 +636,7 @@ class Korail(object):
 
         index = 1
         for psg in passengers:
-            d = psg.get_dict(index)
-            data.update(d)
+            data.update(psg.get_dict(index))
             index += 1
 
         r = self._session.post(url, data=data)
