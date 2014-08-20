@@ -67,6 +67,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'requests'
+        'requests',
+        'enum34',
     ],
 )
