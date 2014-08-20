@@ -10,3 +10,4 @@ Core Contributors
 `````````````````
 
 - HyeonSeung Kim <sng2nara@gmail.com> `@sng2c <https://github.com/sng2c>`_
+- Hyeshik Chang <hyeshik@snu.ac.kr> `@hyeshik <https://github.com/hyeshik>`_

@@ -1,16 +1,15 @@
 Korail2
 =======
 
-[![PyPi version](https://pypip.in/v/korail2/badge.png)](https://pypi.python.org/pypi/korail2)
-[![PyPi downloads](https://pypip.in/d/korail2/badge.png)](https://pypi.python.org/pypi/korail2)
+[![PyPi version](https://pypip.in/v/korail2/badge.png?style=flat)](https://pypi.python.org/pypi/korail2)
+[![PyPi downloads](https://pypip.in/d/korail2/badge.png?style=flat)](https://pypi.python.org/pypi/korail2)
+[![PyPi status](https://pypip.in/status/korail2/badge.svg?style=flat)](https://pypi.python.org/pypi/korail2)
+[![PyPi license](https://pypip.in/license/korail2/badge.svg?style=flat)](https://pypi.python.org/pypi/korail2)
 
-- **2014.08.11 ANNOUNCEMENT** : *Good* news! this library is working again right now! Thanks for [hyeshik](https://github.com/hyeshik)
 
 Korail (www.letskorail.com) wrapper for Python.
 
 This project was inspired from [korail](https://github.com/devxoul/korail) of [devxoul](https://github.com/devxoul).
-
-[korail](https://github.com/devxoul/korail) is not working anymore becuase of a huge change in Korail API.
 
 
 Documentation
