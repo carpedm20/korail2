@@ -6,11 +6,10 @@
     :copyright: (c) 2014 by Taehoon Kim.
     :license: BSD, see LICENSE for more details.
 """
-
+from __future__ import print_function
 import re
 import requests
 from datetime import datetime
-from contants import *
 
 try:
     import simplejson as json
@@ -42,7 +41,6 @@ KORAIL_STATION_DB_DATA  = "%s.common.stationdata" % KORAIL_MOBILE
 KORAIL_EVENT            = "%s.common.event" % KORAIL_MOBILE
 KORAIL_PAYMENT          = "%s/ebizmw/PrdPkgMainList.do" % KORAIL_DOMAIN
 KORAIL_PAYMENT_VOUNCHER = "%s/ebizmw/PrdPkgBoucherView.do" % KORAIL_DOMAIN
-
 
 class Schedule(object):
     """Korail train object. Highly inspired by `korail.py
@@ -89,7 +87,7 @@ class Schedule(object):
     arr_code = None # h_arv_rs_stn_cd
 
     #: 도착 날짜 (yyyyMMdd)
-    dep_date = None # h_arv_dt
+    arr_date = None # h_arv_dt
 
     #: 도착 시각 (hhmmss)
     arr_time = None # h_arv_tm
@@ -148,13 +146,13 @@ class Train(Schedule):
     #: 00: 특실 없음
     #: 11: 예약 가능
     #: 13: 매진
-    special_seat = False # h_spe_rsv_cd
+    special_seat = None # h_spe_rsv_cd
 
     #: 일반실 예약가능 여부
     #: 00: 일반실 없음
     #: 11: 예약 가능
     #: 13: 매진
-    general_seat = False # h_gen_rsv_cd
+    general_seat = None # h_gen_rsv_cd
 
     def __init__(self, data):
         super(Train, self).__init__(data)
@@ -169,15 +167,24 @@ class Train(Schedule):
 
         if self.reserve_possible_name is not None:
             seats = []
-            if self.special_seat == '11':
+            if self.has_special_seat():
                 seats.append("특실")
 
-            if self.general_seat == '11':
+            if self.has_general_seat():
                 seats.append("일반실")
+
             repr_str += " "+ (",".join(seats)) + " " + self.reserve_possible_name.replace('\n',' ')
 
         return repr_str
 
+    def has_special_seat(self):
+        return self.special_seat == '11'
+
+    def has_general_seat(self):
+        return self.general_seat == '11'
+
+    def has_seat(self):
+        return self.has_general_seat() or self.has_special_seat()
 
 class Ticket(Train):
     """Ticket object"""
@@ -292,6 +299,13 @@ class ChildPassenger(Passenger):
 class SeniorPassenger(Passenger):
     def __init__(self, count=1, discount_type='P41', card='', card_no='', card_pw=''):
         Passenger.__init__(self, '1', count, discount_type, card, card_no, card_pw)
+
+
+class ReserveOption:
+    GENERAL_FIRST = "GENERAL_FIRST" # 일반실 우선
+    GENERAL_ONLY = "GENERAL_ONLY"   # 일반실만
+    SPECIAL_FIRST = "SPECIAL_FIRST" # 특실 우선
+    SPECIAL_ONLY = "SPECIAL_ONLY"   # 특실만
 
 
 class Reservation(Train):
@@ -483,7 +497,7 @@ class Korail(object):
     def _result_check(self, j):
         """Result data check"""
         if self.want_feedback:
-            print j['h_msg_txt']
+            print(j['h_msg_txt'])
 
         if j['strResult'] == 'FAIL':
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')
@@ -498,7 +512,7 @@ class Korail(object):
             return True
 
     def search_train(self, dep, arr, date=None, time=None, train_type='05',
-                     passengers=None):
+                     passengers=None, show_all=False):
         """Search trains for specific time and date.
 
 :param dep: A departure station in Korean  ex) '서울'
@@ -516,6 +530,8 @@ class Korail(object):
                    - 07: KTX-산천
                    - 08: ITX-새마을
                    - 09: ITX-청춘
+:param passengers=None: (optional) List of Passenger Objects. None means 1 AdultPassenger.
+:param show_all=False: (optional) When True, a result includes trains which has no seats.
 """
         if date is None:
             date = datetime.now().strftime("%Y%m%d")
@@ -568,18 +584,50 @@ class Korail(object):
                     try: info[i] = info[i].encode('utf-8')
                     except: pass
 
-                trains.append(Train(info))
+                train = Train(info)
+
+                if   show_all is True:
+                    trains.append(train)
+                elif show_all is False and train.has_seat():
+                    trains.append(train)
 
             return trains
 
-    def reserve(self, train, passengers=None):
+    def reserve(self, train, passengers=None, option=ReserveOption.GENERAL_FIRST):
         """Reserve a train.
 
 :param train: An instance of `Train`.
+:param passengers=None: (optional) List of Passenger Objects. None means 1 AdultPassenger.
+:param option=ReserveOption.: (optional)
         """
-        # train : 예약을 위한 차량의 필수 정보를 가진 모든 객체를 이용할 수 있어야 한다.
+
+        # 좌석 선택 옵션에 따라 결정.
+        seat_type = None
+        if train.has_seat() is False:                       # 자리가 둘다 없는 경우는 SoldOutError발생
+            raise SoldOutError()
+        elif option == ReserveOption.GENERAL_ONLY: # 이후 일반석, 특실 중 하나는 무조건 있는 조건
+            if train.has_general_seat():
+                seat_type = '1'
+            else:
+                raise SoldOutError()
+        elif option == ReserveOption.SPECIAL_ONLY:
+            if train.has_special_seat():
+                seat_type = '2'
+            else:
+                raise SoldOutError()
+        elif option == ReserveOption.GENERAL_FIRST:
+            if train.has_general_seat():
+                seat_type = '1'
+            else:
+                seat_type = '2'
+        elif option == ReserveOption.SPECIAL_FIRST:
+            if train.has_special_seat():
+                seat_type = '2'
+            else:
+                seat_type = '1'
+
         if passengers is None:
-            passengers = (AdultPassenger(),)
+            passengers = [AdultPassenger()]
 
         url = KORAIL_TICKETRESERVATION
         data = {
@@ -609,7 +657,7 @@ class Korail(object):
             'txtTrnNo1'      : train.train_no,
             'txtRunDt1'      : train.run_date,
             'txtTrnClsfCd1'  : train.train_type,
-            'txtPsrmClCd1'   : '1',
+            'txtPsrmClCd1'   : seat_type,
             'txtChgFlg1'     : '',
 
             # 이하 여정정보2
@@ -702,7 +750,7 @@ class Korail(object):
                         except: pass
                     reserves.append(Reservation(info))
                 return reserves
-        except NoResultsError, e:
+        except NoResultsError:
             return []
 
     def cancel(self, rsv):
