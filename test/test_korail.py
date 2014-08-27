@@ -5,6 +5,7 @@ import os.path
 from datetime import date, timedelta
 from korail2 import *
 import sys
+
 __author__ = 'sng2c'
 
 
@@ -29,14 +30,49 @@ class TestKorail(TestCase):
             self.korail.login()
             self.assertTrue(self.korail.logined, "로그인 성공 체크")
         except Exception:
-            self.fail( sys.exc_info()[1])
+            self.fail(sys.exc_info()[1])
 
     def test_logout(self):
         try:
             self.korail.logout()
             self.assertFalse(self.korail.logined, "로그아웃 성공 체크")
         except Exception:
-            self.fail( sys.exc_info()[1])
+            self.fail(sys.exc_info()[1])
+
+    def test_passenger_reduce(self):
+        reduced = Passenger.reduce(
+            [AdultPassenger(), AdultPassenger(), AdultPassenger(count=-1), ChildPassenger(count=0),
+             SeniorPassenger(count=-1)])
+        self.assertEqual(len(reduced), 1)
+        for psgr in reduced:
+            if isinstance(psgr, AdultPassenger):
+                self.assertEqual(psgr.count, 1)
+            if isinstance(psgr, ChildPassenger):
+                self.fail("ChildPassenger must not appear")
+            if isinstance(psgr, SeniorPassenger):
+                self.fail("SeniorPassenger must not appear")
+
+        reduced = Passenger.reduce([AdultPassenger(), ChildPassenger(), SeniorPassenger()])
+        self.assertEqual(len(reduced), 3)
+        for psgr in reduced:
+            if isinstance(psgr, AdultPassenger):
+                self.assertEqual(psgr.count, 1)
+            if isinstance(psgr, ChildPassenger):
+                self.assertEqual(psgr.count, 1)
+            if isinstance(psgr, SeniorPassenger):
+                self.assertEqual(psgr.count, 1)
+
+        reduced = Passenger.reduce(
+            [AdultPassenger(), AdultPassenger(), ChildPassenger(), SeniorPassenger(), SeniorPassenger()])
+        self.assertEqual(len(reduced), 3)
+        for psgr in reduced:
+            if isinstance(psgr, AdultPassenger):
+                self.assertEqual(psgr.count, 2)
+            if isinstance(psgr, ChildPassenger):
+                self.assertEqual(psgr.count, 1)
+            if isinstance(psgr, SeniorPassenger):
+                self.assertEqual(psgr.count, 2)
+
 
     def test__result_check(self):
         try:
@@ -85,7 +121,7 @@ class TestKorail(TestCase):
         print(trains)
 
     # def test_reserve(self):
-    #     self.skipTest("Same to test_cancel")
+    # self.skipTest("Same to test_cancel")
 
     def test_tickets(self):
         tickets = self.korail.tickets()
@@ -101,7 +137,7 @@ class TestKorail(TestCase):
 
             # print reserves
         except Exception:
-            e = self.fail( sys.exc_info()[1])
+            e = self.fail(sys.exc_info()[1])
             self.fail(e.message)
             # self.skipTest(e.message)
 
@@ -162,7 +198,7 @@ class TestKorail(TestCase):
         empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
         if len(empty_seats) > 0:
             try:
-                rsv = self.korail.reserve(empty_seats[0],passengers=passengers)
+                rsv = self.korail.reserve(empty_seats[0], passengers=passengers)
                 rsvlist = self.korail.reservations()
                 matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
                 self.assertEqual(len(matched), 1, "make a reservation")

@@ -33,7 +33,7 @@ except ImportError:
 
 # detect the current version
 with open('korail2/__init__.py') as f:
-    version = re.search(r'__version__\s*=\s*\'(.+?)\'', f.read()).group(1)
+    version = re.search(r'__version__\s*=\s*\'(.+?)\'', f.read()).group_key(1)
 assert version
 
 import codecs

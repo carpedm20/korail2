@@ -9,6 +9,7 @@
 from __future__ import print_function
 import re
 import requests
+import itertools
 from datetime import datetime
 
 try:
@@ -265,6 +266,12 @@ class Passenger:
     card_no = ''        # txtCardNo_1    : '',    #할인카드 번호
     card_pw = ''        # txtCardPw_1    : '',    #할인카드 비밀번호
 
+    @staticmethod
+    def reduce(passenger_list):
+        """Reduce passenger's list."""
+        groups = itertools.groupby(passenger_list, lambda x: x.group_key())
+        return filter(lambda x:x.count>0, [reduce(lambda a, b: a + b, g) for k, g in groups])
+
     def __init__(self, typecode=None, count=1, discount_type='000', card='', card_no='', card_pw=''):
         self.typecode = typecode
         self.count = count
@@ -272,6 +279,19 @@ class Passenger:
         self.card = card
         self.card_no = card_no
         self.card_pw = card_pw
+
+    def __add__(self, other):
+        assert isinstance(other, self.__class__)
+        if self.group_key() == other.group_key():
+            return self.__class__(count=self.count + other.count, discount_type=self.discount_type, card=self.card,
+                                  card_no=self.card_no, card_pw=self.card_pw)
+        else:
+            return TypeError(
+                "other's group_key(%s) is not equal to self's group_key(%s)." % (other.group_key(), self.group_key()))
+
+    def group_key(self):
+        """get group string from attributes except count"""
+        return "%s_%s_%s_%s_%s" % (self.typecode, self.discount_type, self.card, self.card_no, self.card_pw)
 
     def get_dict(self, index):
         assert isinstance(index,int)
@@ -541,6 +561,8 @@ class Korail(object):
         if passengers is None:
             passengers = [AdultPassenger()]
 
+        passengers = Passenger.reduce(passengers)
+
         adult_count  = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, AdultPassenger), passengers), 0)
         child_count  = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, ChildPassenger), passengers), 0)
         senior_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, SeniorPassenger), passengers), 0)
@@ -628,6 +650,8 @@ class Korail(object):
 
         if passengers is None:
             passengers = [AdultPassenger()]
+
+        passengers = Passenger.reduce(passengers)
 
         url = KORAIL_TICKETRESERVATION
         data = {
