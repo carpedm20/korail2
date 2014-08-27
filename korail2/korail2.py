@@ -286,7 +286,7 @@ class Passenger:
             return self.__class__(count=self.count + other.count, discount_type=self.discount_type, card=self.card,
                                   card_no=self.card_no, card_pw=self.card_pw)
         else:
-            return TypeError(
+            raise TypeError(
                 "other's group_key(%s) is not equal to self's group_key(%s)." % (other.group_key(), self.group_key()))
 
     def group_key(self):
