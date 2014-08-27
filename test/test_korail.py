@@ -40,6 +40,20 @@ class TestKorail(TestCase):
             self.fail(sys.exc_info()[1])
 
     def test_passenger_reduce(self):
+        try:
+            Passenger()
+        except NotImplementedError:
+            self.assertTrue(True)
+        else:
+            self.fail("NotImplementedError must be raised")
+
+        try:
+            Passenger.reduce([AdultPassenger, "aaaa"])
+        except TypeError:
+            self.assertTrue(True)
+        else:
+            self.fail("TypeError must be raised")
+
         reduced = Passenger.reduce(
             [AdultPassenger(), AdultPassenger(), AdultPassenger(count=-1), ChildPassenger(count=0),
              SeniorPassenger(count=-1)])

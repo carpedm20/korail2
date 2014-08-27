@@ -269,10 +269,16 @@ class Passenger:
     @staticmethod
     def reduce(passenger_list):
         """Reduce passenger's list."""
-        groups = itertools.groupby(passenger_list, lambda x: x.group_key())
-        return filter(lambda x:x.count>0, [reduce(lambda a, b: a + b, g) for k, g in groups])
+        if filter(lambda x: not isinstance(x, Passenger), passenger_list):
+            raise TypeError("Passengers must be based on Passenger")
 
-    def __init__(self, typecode=None, count=1, discount_type='000', card='', card_no='', card_pw=''):
+        groups = itertools.groupby(passenger_list, lambda x: x.group_key())
+        return filter(lambda x: x.count > 0, [reduce(lambda a, b: a + b, g) for k, g in groups])
+
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("Passenger is abstract class. Do not make instance.")
+
+    def __init_internal__(self, typecode, count=1, discount_type='000', card='', card_no='', card_pw=''):
         self.typecode = typecode
         self.count = count
         self.discount_type = discount_type
@@ -308,17 +314,33 @@ class Passenger:
 
 class AdultPassenger(Passenger):
     def __init__(self, count=1, discount_type='000', card='', card_no='', card_pw=''):
-        Passenger.__init__(self, '1', count, discount_type, card, card_no, card_pw)
+        Passenger.__init_internal__(self, '1', count, discount_type, card, card_no, card_pw)
 
 
 class ChildPassenger(Passenger):
     def __init__(self, count=1, discount_type='000', card='', card_no='', card_pw=''):
-        Passenger.__init__(self, '3', count, discount_type, card, card_no, card_pw)
+        Passenger.__init_internal__(self, '3', count, discount_type, card, card_no, card_pw)
 
 
 class SeniorPassenger(Passenger):
     def __init__(self, count=1, discount_type='P41', card='', card_no='', card_pw=''):
-        Passenger.__init__(self, '1', count, discount_type, card, card_no, card_pw)
+        Passenger.__init_internal__(self, '1', count, discount_type, card, card_no, card_pw)
+
+
+class TrainType:
+    KTX            = "00"  # "KTX, KTX-산천",
+    SAEMAEUL       = "01"  # "새마을호",
+    MUGUNGHWA      = "02"  # "무궁화호",
+    TONGGUEN       = "03"  # "통근열차",
+    NURIRO         = "04"  # "누리로",
+    ALL            = "05"  # "전체",
+    AIRPORT        = "06"  # "공항직통",
+    KTX_SANCHEON   = "KTX-07"  # "KTX-산천",
+    ITX_SAEMAEUL   = "ITX-08"  # "ITX-새마을",
+    ITX_CHEONGCHUN = "ITX-09"  # "ITX-청춘",
+
+    def __init__(self):
+        raise NotImplementedError("Do not make instance.")
 
 
 class ReserveOption:
@@ -326,6 +348,9 @@ class ReserveOption:
     GENERAL_ONLY = "GENERAL_ONLY"   # 일반실만
     SPECIAL_FIRST = "SPECIAL_FIRST" # 특실 우선
     SPECIAL_ONLY = "SPECIAL_ONLY"   # 특실만
+
+    def __init__(self):
+        raise NotImplementedError("Do not make instance.")
 
 
 class Reservation(Train):
@@ -531,7 +556,7 @@ class Korail(object):
         else:
             return True
 
-    def search_train(self, dep, arr, date=None, time=None, train_type='05',
+    def search_train(self, dep, arr, date=None, time=None, train_type=TrainType.ALL,
                      passengers=None, show_all=False):
         """Search trains for specific time and date.
 
