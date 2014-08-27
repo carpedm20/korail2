@@ -1,8 +1,10 @@
 # -*- coding:utf-8 -*-
+from __future__ import print_function
 from unittest import TestCase
 import os.path
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from korail2 import *
+import sys
 
 __author__ = 'sng2c'
 
@@ -27,15 +29,64 @@ class TestKorail(TestCase):
         try:
             self.korail.login()
             self.assertTrue(self.korail.logined, "로그인 성공 체크")
-        except Exception, e:
-            self.fail(e)
+        except Exception:
+            self.fail(sys.exc_info()[1])
 
     def test_logout(self):
         try:
             self.korail.logout()
             self.assertFalse(self.korail.logined, "로그아웃 성공 체크")
-        except Exception, e:
-            self.fail(e)
+        except Exception:
+            self.fail(sys.exc_info()[1])
+
+    def test_passenger_reduce(self):
+        try:
+            Passenger()
+        except NotImplementedError:
+            self.assertTrue(True)
+        else:
+            self.fail("NotImplementedError must be raised")
+
+        try:
+            Passenger.reduce([AdultPassenger, "aaaa"])
+        except TypeError:
+            self.assertTrue(True)
+        else:
+            self.fail("TypeError must be raised")
+
+        reduced = Passenger.reduce(
+            [AdultPassenger(), AdultPassenger(), AdultPassenger(count=-1), ChildPassenger(count=0),
+             SeniorPassenger(count=-1)])
+        self.assertEqual(len(reduced), 1)
+        for psgr in reduced:
+            if isinstance(psgr, AdultPassenger):
+                self.assertEqual(psgr.count, 1)
+            if isinstance(psgr, ChildPassenger):
+                self.fail("ChildPassenger must not appear")
+            if isinstance(psgr, SeniorPassenger):
+                self.fail("SeniorPassenger must not appear")
+
+        reduced = Passenger.reduce([AdultPassenger(), ChildPassenger(), SeniorPassenger()])
+        self.assertEqual(len(reduced), 3)
+        for psgr in reduced:
+            if isinstance(psgr, AdultPassenger):
+                self.assertEqual(psgr.count, 1)
+            if isinstance(psgr, ChildPassenger):
+                self.assertEqual(psgr.count, 1)
+            if isinstance(psgr, SeniorPassenger):
+                self.assertEqual(psgr.count, 1)
+
+        reduced = Passenger.reduce(
+            [AdultPassenger(), AdultPassenger(), ChildPassenger(), SeniorPassenger(), SeniorPassenger()])
+        self.assertEqual(len(reduced), 3)
+        for psgr in reduced:
+            if isinstance(psgr, AdultPassenger):
+                self.assertEqual(psgr.count, 2)
+            if isinstance(psgr, ChildPassenger):
+                self.assertEqual(psgr.count, 1)
+            if isinstance(psgr, SeniorPassenger):
+                self.assertEqual(psgr.count, 2)
+
 
     def test__result_check(self):
         try:
@@ -81,10 +132,10 @@ class TestKorail(TestCase):
         tomorrow = date.today() + timedelta(days=1)
         trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
-        print trains
+        print(trains)
 
     # def test_reserve(self):
-    #     self.skipTest("Same to test_cancel")
+    # self.skipTest("Same to test_cancel")
 
     def test_tickets(self):
         tickets = self.korail.tickets()
@@ -99,7 +150,8 @@ class TestKorail(TestCase):
             self.assertIsInstance(reserves, list)
 
             # print reserves
-        except Exception, e:
+        except Exception:
+            e = self.fail(sys.exc_info()[1])
             self.fail(e.message)
             # self.skipTest(e.message)
 
@@ -110,15 +162,40 @@ class TestKorail(TestCase):
 
         empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
         if len(empty_seats) > 0:
-            rsv = self.korail.reserve(empty_seats[0])
-            rsvlist = self.korail.reservations()
-            matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
-            self.assertEqual(len(matched), 1, "make a reservation")
+            try:
+                rsv = self.korail.reserve(empty_seats[0])
+                rsvlist = self.korail.reservations()
+                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                self.assertEqual(len(matched), 1, "make a reservation")
 
-            self.korail.cancel(rsv)
-            rsvlist = self.korail.reservations()
-            matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
-            self.assertEqual(len(matched), 0, "cancel the reservation")
+                self.korail.cancel(rsv)
+                rsvlist = self.korail.reservations()
+                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                self.assertEqual(len(matched), 0, "cancel the reservation")
+            except SoldOutError:
+                self.skipTest("Sold Out")
+        else:
+            self.skipTest("No Empty Seats tomorrow.")
+
+    def test_reserve_and_cancel2(self):
+        # self.skipTest("Not implemented")
+        tomorrow = date.today() + timedelta(days=1)
+        trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
+
+        empty_seats = filter(lambda x: x.has_special_seat(), trains)
+        if len(empty_seats) > 0:
+            try:
+                rsv = self.korail.reserve(empty_seats[0], option=ReserveOption.SPECIAL_ONLY)
+                rsvlist = self.korail.reservations()
+                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                self.assertEqual(len(matched), 1, "make a reservation")
+
+                self.korail.cancel(rsv)
+                rsvlist = self.korail.reservations()
+                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                self.assertEqual(len(matched), 0, "cancel the reservation")
+            except SoldOutError:
+                self.skipTest("Sold Out")
         else:
             self.skipTest("No Empty Seats tomorrow.")
 
@@ -131,11 +208,11 @@ class TestKorail(TestCase):
             SeniorPassenger(1),
         )
         trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000", passengers=passengers)
-        print trains
+        print(trains)
         empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
         if len(empty_seats) > 0:
             try:
-                rsv = self.korail.reserve(empty_seats[0],passengers=passengers)
+                rsv = self.korail.reserve(empty_seats[0], passengers=passengers)
                 rsvlist = self.korail.reservations()
                 matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
                 self.assertEqual(len(matched), 1, "make a reservation")
@@ -145,13 +222,13 @@ class TestKorail(TestCase):
                 matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
                 self.assertEqual(len(matched), 0, "cancel the reservation")
             except SoldOutError:
-                self.skipTest("Sold Out");
+                self.skipTest("Sold Out")
         else:
             self.skipTest("No Empty Seats tomorrow.")
 
     def test_cancel_all(self):
         for rsv in self.korail.reservations():
             res = self.korail.cancel(rsv)
-            print repr(rsv) + "\n" + str(res)
+            print(repr(rsv) + "\n" + str(res))
 
         self.assertFalse(self.korail.reservations())
