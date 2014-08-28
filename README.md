@@ -91,7 +91,7 @@ You can search train schedules `search_train` and `search_train_allday` methods.
     - 08: TrainType.ITX_SAEMAEUL - ITX-새마을 
     - 09: TrainType.ITX_CHEONGCHUN - ITX-청춘
 - (optional) passengers=None : List of Passenger Objects. None means 1 AdultPassenger.
-- (optional) show_all=False : When True, a result includes trains which has no seats.
+- (optional) include_no_seats=False : When True, a result includes trains which has no seats.
 
 Below is a sample usage of `search_train`:
 
@@ -114,7 +114,7 @@ Below is a sample usage of `search_train`:
 When you want to see sold-out trains.
 
 ```python
->>> trains = korail.search_train(dep, arr, date, time, show_all=True)
+>>> trains = korail.search_train(dep, arr, date, time, include_no_seats=True)
 [[KTX] 8월 3일, 서울~부산(11:00~13:42) 특실,일반실 예약가능,
  [ITX-새마을] 8월 3일, 서울~부산(11:04~16:00) 일반실 예약가능,
  [무궁화호] 8월 3일, 서울~부산(11:08~16:54) 입석 역발매중,

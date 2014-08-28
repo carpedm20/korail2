@@ -102,8 +102,8 @@ arguments:
 
 -  (optional) passengers=None : List of Passenger Objects. None means 1
    AdultPassenger.
--  (optional) show\_all=False : When True, a result includes trains
-   which has no seats.
+-  (optional) include\_no\_seats=False : When True, a result includes
+   trains which has no seats.
 
 Below is a sample usage of ``search_train``:
 
@@ -127,7 +127,7 @@ When you want to see sold-out trains.
 
 .. code:: python
 
-    >>> trains = korail.search_train(dep, arr, date, time, show_all=True)
+    >>> trains = korail.search_train(dep, arr, date, time, include_no_seats=True)
     [[KTX] 8월 3일, 서울~부산(11:00~13:42) 특실,일반실 예약가능,
      [ITX-새마을] 8월 3일, 서울~부산(11:04~16:00) 일반실 예약가능,
      [무궁화호] 8월 3일, 서울~부산(11:08~16:54) 입석 역발매중,

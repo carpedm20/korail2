@@ -577,7 +577,7 @@ When you want change ID using existing object,
             return True
 
     def search_train_allday(self,  dep, arr, date=None, time=None, train_type=TrainType.ALL,
-                            passengers=None, show_only_seat=True):
+                            passengers=None, include_no_seats=False):
         """Search all trains for specific time and date."""
         min1 = timedelta(minutes=1)
         all_trains = []
@@ -595,13 +595,13 @@ When you want change ID using existing object,
         if len(all_trains) == 0:
             raise NoResultsError()
 
-        if show_only_seat:
+        if not include_no_seats:
             all_trains = filter(lambda x: x.has_seat(), all_trains)
 
         return all_trains
 
     def search_train(self, dep, arr, date=None, time=None, train_type=TrainType.ALL,
-                     passengers=None, show_only_seat=True):
+                     passengers=None, include_no_seats=False):
         """Search trains for specific time and date.
 
 :param dep: A departure station in Korean  ex) '서울'
@@ -620,7 +620,7 @@ When you want change ID using existing object,
                    - 08: ITX-새마을
                    - 09: ITX-청춘
 :param passengers=None: (optional) List of Passenger Objects. None means 1 AdultPassenger.
-:param show_all=False: (optional) When True, a result includes trains which has no seats.
+:param include_no_seats=False: (optional) When True, a result includes trains which has no seats.
 
 Below is a sample usage of `search_train`:
 
@@ -638,9 +638,9 @@ Below is a sample usage of `search_train`:
      [KTX] 8월 3일, 서울~부산(13:00~15:37) 특실,일반실 예약가능,
      [KTX] 8월 3일, 서울~부산(13:10~15:58) 특실,일반실 예약가능]
 
-When you want to see sold-out trains.
+When you want to see trains which has no seats.
 
-    >>> trains = korail.search_train(dep, arr, date, time, show_all=True)
+    >>> trains = korail.search_train(dep, arr, date, time, include_no_seats=True)
     [[KTX] 8월 3일, 서울~부산(11:00~13:42) 특실,일반실 예약가능,
      [ITX-새마을] 8월 3일, 서울~부산(11:04~16:00) 일반실 예약가능,
      [무궁화호] 8월 3일, 서울~부산(11:08~16:54) 입석 역발매중,
@@ -735,12 +735,10 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
                     try: info[i] = info[i].encode('utf-8')
                     except: pass
 
-                train = Train(info)
+                trains.append(Train(info))
 
-                if   show_only_seat is False:
-                    trains.append(train)
-                elif show_only_seat is True and train.has_seat():
-                    trains.append(train)
+            if not include_no_seats:
+                trains = filter(lambda x: x.has_seat(), trains)
 
             return trains
 
