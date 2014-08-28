@@ -483,11 +483,31 @@ class Korail(object):
 
     def login(self, id=None, password=None):
         """Login to Korail server.
-:param id: `Korail membership number` or `phone number` or `email`
+:param id : `Korail membership number` or `phone number` or `email`
     membership   : xxxxxxxx (8 digits)
     phone number : xxx-xxxx-xxxx
     email        : xxx@xxx.xxx
-:param password: Korail account password
+:param password : Korail account password
+:param auto_login=True :
+
+First, you need to create a Korail object.
+
+    >>> from korail2 import Korail
+    >>> korail = Korail("12345678", YOUR_PASSWORD) # with membership number
+    >>> korail = Korail("carpedm20@gmail.com", YOUR_PASSWORD) # with email
+    >>> korail = Korail("010-9964-xxxx", YOUR_PASSWORD) # with phone number
+
+If you do not want login automatically,
+
+    >>> korail = Korail("12345678", YOUR_PASSWORD, auto_login=False)
+    >>> korail.login()
+    True
+
+When you want change ID using existing object,
+
+    >>> korail.login(ANOTHER_ID, ANOTHER_PASSWORD)
+    True
+
 """
         if id is None:
             id = self.id
@@ -577,6 +597,66 @@ class Korail(object):
                    - 09: ITX-청춘
 :param passengers=None: (optional) List of Passenger Objects. None means 1 AdultPassenger.
 :param show_all=False: (optional) When True, a result includes trains which has no seats.
+
+Below is a sample usage of `search_train`:
+
+    >>> dep = '서울'
+    >>> arr = '동대구'
+    >>> date = '20140815'
+    >>> time = '144000'
+    >>> trains = korail.search_train(dep, arr, date, time)
+    [[KTX] 8월 3일, 서울~부산(11:00~13:42) 특실,일반실 예약가능,
+     [ITX-새마을] 8월 3일, 서울~부산(11:04~16:00) 일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:00~14:43) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:30~15:13) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:40~15:45) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:55~15:26) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(13:00~15:37) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(13:10~15:58) 특실,일반실 예약가능]
+
+When you want to see sold-out trains.
+
+    >>> trains = korail.search_train(dep, arr, date, time, show_all=True)
+    [[KTX] 8월 3일, 서울~부산(11:00~13:42) 특실,일반실 예약가능,
+     [ITX-새마을] 8월 3일, 서울~부산(11:04~16:00) 일반실 예약가능,
+     [무궁화호] 8월 3일, 서울~부산(11:08~16:54) 입석 역발매중,
+     [ITX-새마을] 8월 3일, 서울~부산(11:50~16:50) 입석 역발매중,
+     [KTX] 8월 3일, 서울~부산(12:00~14:43) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:30~15:13) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:40~15:45) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(12:55~15:26) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(13:00~15:37) 특실,일반실 예약가능,
+     [KTX] 8월 3일, 서울~부산(13:10~15:58) 특실,일반실 예약가능]
+
+`passengers` is a list(or tuple) of Passeger Objects.
+By this, you can search for multiple passengers.
+There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPassenger.
+
+    # for 1 adult, 1 child
+    >>> psgrs = [AdultPassenger(), ChildPassenger()]
+
+    # for 2 adults, 1 child
+    >>> psgrs = [AdultPassenger(2), ChildPassenger(1)]
+    # ditto. They are being added each other by same group.
+    >>> psgrs = [AdultPassenger(), AdultPassenger(), ChildPassenger()]
+
+    # for 2 adults, 1 child, 1 senior
+    >>> psgrs = [AdultPassenger(2), ChildPassenger(), SeniorPassenger()]
+
+    # for 1 adult, It supports negative count or zero count.
+    # But it uses passengers which the sum is greater than zero.
+    >>> psgrs = [AdultPassenger(2), AdultPassenger(-1)]
+    >>> psgrs = [AdultPassenger(), SeniorPassenger(0)]
+
+    # Nothing
+    >>> psgrs = [AdultPassenger(0), SeniorPassenger(0)]
+
+    # then search or reserve train
+    >>> trains = korail.search_train(dep, arr, date, time, passengers=psgrs)
+    ...
+    >>> korail.reserve(trains[0], psgrs)
+    ...
+
 """
         if date is None:
             date = datetime.now().strftime("%Y%m%d")
