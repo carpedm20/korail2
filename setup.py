@@ -32,9 +32,7 @@ except ImportError:
     from setuptools import setup
 
 # detect the current version
-with open('korail2/__init__.py') as f:
-    version = re.search(r'__version__\s*=\s*\'(.+?)\'', f.read()).group_key(1)
-assert version
+version = '0.0.6'
 
 import codecs
 
