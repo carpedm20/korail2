@@ -71,8 +71,16 @@ When you want change ID using existing object,
 2. Search train
 ~~~~~~~~~~~~~~~
 
-You can search train schedules ``search_train`` method. ``search_train``
-method takes these arguments:
+You can search train schedules ``search_train`` and
+``search_train_allday`` methods.
+
+-  ``search_train`` returns 10 results max. Faster than
+   ``search_train_allday``.
+-  ``search_train_allday`` returns all results after the time.
+-  ``search_train_allday`` uses ``search_train`` repeatedly.
+
+``search_train`` and ``search_train_allday`` methods take these
+arguments:
 
 -  dep : A departure station in Korean ex) '서울'
 -  arr : A arrival station in Korean ex) '부산'

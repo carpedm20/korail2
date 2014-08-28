@@ -10,7 +10,7 @@ from __future__ import print_function
 import re
 import requests
 import itertools
-from datetime import datetime
+from datetime import datetime, timedelta
 
 try:
     import simplejson as json
@@ -450,7 +450,7 @@ class NeedToLoginError(KorailError):
 
 class NoResultsError(KorailError):
     """Korail NoResults Error Class"""
-    codes = {'P100'}
+    codes = {'P100', 'WRG000000'}
 
     def __init__(self, code=None):
         KorailError.__init__(self, "No Results", code)
@@ -576,8 +576,32 @@ When you want change ID using existing object,
         else:
             return True
 
+    def search_train_allday(self,  dep, arr, date=None, time=None, train_type=TrainType.ALL,
+                            passengers=None, show_only_seat=True):
+        """Search all trains for specific time and date."""
+        min1 = timedelta(minutes=1)
+        all_trains = []
+        last_time = time
+        for i in range(15): # 최대 15번 호출
+            try:
+                trains = self.search_train(dep, arr, date, last_time, train_type, passengers, False)
+                all_trains.extend(trains)
+                # 마지막 열차시간에 1분 더해서 계속 검색.
+                t = datetime.strptime(all_trains[-1].dep_time, "%H%M%S") + min1
+                last_time = t.strftime("%H%M%S")
+            except NoResultsError:
+                break
+
+        if len(all_trains) == 0:
+            raise NoResultsError()
+
+        if show_only_seat:
+            all_trains = filter(lambda x: x.has_seat(), all_trains)
+
+        return all_trains
+
     def search_train(self, dep, arr, date=None, time=None, train_type=TrainType.ALL,
-                     passengers=None, show_all=False):
+                     passengers=None, show_only_seat=True):
         """Search trains for specific time and date.
 
 :param dep: A departure station in Korean  ex) '서울'
@@ -713,9 +737,9 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
 
                 train = Train(info)
 
-                if   show_all is True:
+                if   show_only_seat is False:
                     trains.append(train)
-                elif show_all is False and train.has_seat():
+                elif show_only_seat is True and train.has_seat():
                     trains.append(train)
 
             return trains
@@ -725,7 +749,18 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
 
 :param train: An instance of `Train`.
 :param passengers=None: (optional) List of Passenger Objects. None means 1 AdultPassenger.
-:param option=ReserveOption.: (optional)
+:param option=ReserveOption.GENERAL_FIRST : (optional)
+
+When tickets are not enough much for passengers, it raises SoldOutError.
+
+If you want to select priority of seat grade, general or special,
+There are 4 options in ReserveOption class.
+
+- GENERAL_FIRST : Economic than Comfortable.
+- GENERAL_ONLY  : Reserve only general seats. You are poorman ;-)
+- SPECIAL_FIRST : Comfortable than Economic.
+- SPECIAL_ONLY  : Richman.
+
         """
 
         # 좌석 선택 옵션에 따라 결정.
