@@ -2,7 +2,7 @@
 from __future__ import print_function
 from unittest import TestCase
 import os.path
-from datetime import date, timedelta
+from datetime import datetime, time, date, timedelta
 from korail2 import *
 import sys
 
@@ -133,6 +133,10 @@ class TestKorail(TestCase):
         trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
         print(trains)
+
+        alltrains = self.korail.search_train_allday("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
+        self.assertGreaterEqual(len(alltrains), len(trains), "tomorrow train search")
+        print(alltrains)
 
     # def test_reserve(self):
     # self.skipTest("Same to test_cancel")
