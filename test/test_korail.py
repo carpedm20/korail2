@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-from __future__ import print_function
 from unittest import TestCase
 import os.path
 from datetime import datetime, time, date, timedelta
@@ -91,14 +90,14 @@ class TestKorail(TestCase):
     def test__result_check(self):
         try:
             self.korail._result_check({})
-        except KorailError:
+        except KorailError, e:
             self.assertTrue(False)
-        except Exception:
+        except Exception, e:
             self.assertTrue(True)
 
         try:
             self.korail._result_check({"strResult": "SUCC", "h_msg_cd": "P000", "h_msg_txt": "UNKNOWN"})
-        except Exception:
+        except Exception, e:
             self.assertTrue(False)
         else:
             self.assertTrue(True)
@@ -107,7 +106,7 @@ class TestKorail(TestCase):
             self.korail._result_check({"strResult": "FAIL", "h_msg_cd": "P000", "h_msg_txt": "UNKNOWN"})
         except KorailError:
             self.assertTrue(True)
-        except Exception:
+        except Exception, e:
             self.assertTrue(False)
 
         try:
@@ -116,7 +115,7 @@ class TestKorail(TestCase):
             self.assertTrue(True)
         except KorailError:
             self.assertTrue(False)
-        except Exception:
+        except Exception, e:
             self.assertTrue(False)
 
         try:
@@ -125,18 +124,18 @@ class TestKorail(TestCase):
             self.assertTrue(True)
         except KorailError:
             self.assertTrue(False)
-        except Exception:
+        except Exception, e:
             self.assertTrue(False)
 
     def test_search_train(self):
         tomorrow = date.today() + timedelta(days=1)
         trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
-        print(trains)
+        print trains
 
         alltrains = self.korail.search_train_allday("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(alltrains), len(trains), "tomorrow train search")
-        print(alltrains)
+        print alltrains
 
     # def test_reserve(self):
     # self.skipTest("Same to test_cancel")
@@ -154,8 +153,7 @@ class TestKorail(TestCase):
             self.assertIsInstance(reserves, list)
 
             # print reserves
-        except Exception:
-            e = self.fail(sys.exc_info()[1])
+        except Exception, e:
             self.fail(e.message)
             # self.skipTest(e.message)
 
@@ -212,7 +210,7 @@ class TestKorail(TestCase):
             SeniorPassenger(1),
         )
         trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000", passengers=passengers)
-        print(trains)
+        print trains
         empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
         if len(empty_seats) > 0:
             try:

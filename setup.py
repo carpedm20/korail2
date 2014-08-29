@@ -72,4 +72,5 @@ setup(
     install_requires=[
         'requests',
     ],
+    use_2to3=True,
 )
