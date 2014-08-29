@@ -22,7 +22,6 @@ Links
 
 """
 from __future__ import with_statement
-import re
 
 try:
     from setuptools import setup
@@ -37,7 +36,7 @@ version = '0.0.6'
 import codecs
 
 with codecs.open('README.rst', 'r', encoding='utf8') as f:
-    long_desc = f.read
+    long_desc = f.read()
 
 setup(
     name='korail2',
@@ -72,5 +71,5 @@ setup(
     install_requires=[
         'requests',
     ],
-    use_2to3=True,
+    use_2to3=True
 )
