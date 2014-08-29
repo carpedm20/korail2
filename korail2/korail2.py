@@ -6,7 +6,6 @@
     :copyright: (c) 2014 by Taehoon Kim.
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import print_function
 import re
 import requests
 import itertools
@@ -562,7 +561,7 @@ When you want change ID using existing object,
     def _result_check(self, j):
         """Result data check"""
         if self.want_feedback:
-            print(j['h_msg_txt'])
+            print j['h_msg_txt']
 
         if j['strResult'] == 'FAIL':
             h_msg_cd  = j['h_msg_cd'].encode('utf-8')

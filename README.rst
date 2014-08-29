@@ -48,7 +48,7 @@ First, you need to create a Korail object.
 
 .. code:: python
 
-    >>> from korail2 import Korail
+    >>> from korail2 import *
     >>> korail = Korail("12345678", YOUR_PASSWORD) # with membership number
     >>> korail = Korail("carpedm20@gmail.com", YOUR_PASSWORD) # with email
     >>> korail = Korail("010-9964-xxxx", YOUR_PASSWORD) # with phone number
