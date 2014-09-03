@@ -597,11 +597,11 @@ When you want change ID using existing object,
             except NoResultsError:
                 break
 
-        if len(all_trains) == 0:
-            raise NoResultsError()
-
         if not include_no_seats:
             all_trains = filter(lambda x: x.has_seat(), all_trains)
+
+        if len(all_trains) == 0:
+            raise NoResultsError()
 
         return all_trains
 
