@@ -452,7 +452,10 @@ class NeedToLoginError(KorailError):
 
 class NoResultsError(KorailError):
     """Korail NoResults Error Class"""
-    codes = {'P100', 'WRG000000'}
+    codes = {'P100',
+             'WRG000000',
+             'WRD000061',  # 직통열차는 없지만, 환승으로 조회 가능합니다.
+    }
 
     def __init__(self, code=None):
         KorailError.__init__(self, "No Results", code)
