@@ -589,7 +589,7 @@ When you want change ID using existing object,
         last_time = time
         for i in range(15):  # 최대 15번 호출
             try:
-                trains = self.search_train(dep, arr, date, last_time, train_type, passengers, False)
+                trains = self.search_train(dep, arr, date, last_time, train_type, passengers, True)
                 all_trains.extend(trains)
                 # 마지막 열차시간에 1분 더해서 계속 검색.
                 t = datetime.strptime(all_trains[-1].dep_time, "%H%M%S") + min1
