@@ -227,19 +227,6 @@ You can get the list of paid tickes with `tickets` method.
 [[KTX] 8월 10일, 동대구~울산(09:26~09:54) => 5호 4A, 13900원]
 ```
 
-How do I get the Korail API
----------------------------
-
-1. Extract Korail apk from mobile phone
-1. Decompile apk using [dex2jar](https://code.google.com/p/dex2jar/)
-1. Read a jar code using [jdgui](http://jd.benow.ca/)
-1. Edit a smaili code
-1. Recompile a new Korail apk using [apktool](https://code.google.com/p/android-apktool/)
-1. Key signing with `motizen-sign`
-1. Upload and run a new Korail apk
-1. Capture packets and analyze the API
-
-
 Todo
 ----
 
