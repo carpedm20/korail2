@@ -22,7 +22,7 @@ PHONE_NUMBER_REGEX = re.compile(r"(\d{3})-(\d{3,4})-(\d{4})")
 
 SCHEME = "https"
 KORAIL_HOST = "smart.letskorail.com"
-KORAIL_PORT = "443"
+KORAIL_PORT = "9443"
 
 KORAIL_DOMAIN = "%s://%s:%s" % (SCHEME, KORAIL_HOST, KORAIL_PORT)
 KORAIL_MOBILE = "%s/classes/com.korail.mobile" % KORAIL_DOMAIN
