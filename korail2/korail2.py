@@ -937,10 +937,10 @@ There are 4 options in ReserveOption class.
                         for tinfo in info['train_infos']['train_info']:
                             # noinspection PyBroadException
                             try:
-                                info[i] = info[i].encode('utf-8')
+                                tinfo[i] = tinfo[i].encode('utf-8')
                             except:
                                 pass
-                            reserves.append(Reservation([0]))
+                            reserves.append(Reservation(tinfo))
                 return reserves
         except NoResultsError:
             return []
