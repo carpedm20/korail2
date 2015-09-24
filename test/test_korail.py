@@ -5,11 +5,27 @@ from datetime import datetime, time, date, timedelta
 from korail2 import *
 import sys
 
+import logging
+try:
+    import http.client as http_client
+except ImportError:
+    # Python 2
+    import httplib as http_client
+http_client.HTTPConnection.debuglevel = 1
+
+# You must initialize logging, otherwise you'll not see debug output.
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
+requests_log = logging.getLogger("requests.packages.urllib3")
+requests_log.setLevel(logging.DEBUG)
+requests_log.propagate = True
+
 __author__ = 'sng2c'
 
 
 class TestKorail(TestCase):
     def setUp(self):
+
         if not (hasattr(self, "koid") and hasattr(self, "kopw")):
             filepath = "korail_idpw.txt"
             if os.path.exists(filepath):
@@ -128,7 +144,7 @@ class TestKorail(TestCase):
             self.assertTrue(False)
 
     def test_search_train(self):
-        tomorrow = date.today() + timedelta(days=1)
+        tomorrow = date.today() + timedelta(days=30)
         trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
         print trains
@@ -141,7 +157,10 @@ class TestKorail(TestCase):
     # self.skipTest("Same to test_cancel")
 
     def test_tickets(self):
-        tickets = self.korail.tickets()
+        try:
+            tickets = self.korail.tickets()
+        except KorailError:
+            self.skipTest("Sold out")
         self.assertIsInstance(tickets, list)
 
     def test_reservations(self):
@@ -159,8 +178,9 @@ class TestKorail(TestCase):
 
     def test_reserve_and_cancel(self):
         # self.skipTest("Not implemented")
-        tomorrow = date.today() + timedelta(days=1)
-        trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
+        after1hour = date.today() + timedelta(days=30)
+
+        trains = self.korail.search_train("서울", "부산", after1hour.strftime("%Y%m%d"), after1hour.strftime("%H%M%S"))
 
         empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
         if len(empty_seats) > 0:
@@ -182,7 +202,11 @@ class TestKorail(TestCase):
     def test_reserve_and_cancel2(self):
         # self.skipTest("Not implemented")
         tomorrow = date.today() + timedelta(days=1)
-        trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
+
+        try:
+            trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
+        except NoResultsError:
+            self.skipTest("Sold out")
 
         empty_seats = filter(lambda x: x.has_special_seat(), trains)
         if len(empty_seats) > 0:
@@ -209,7 +233,11 @@ class TestKorail(TestCase):
             ChildPassenger(1),
             SeniorPassenger(1),
         )
-        trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000", passengers=passengers)
+        try:
+            trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000", passengers=passengers)
+        except NoResultsError:
+            self.skipTest("Sold out")
+
         print trains
         empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
         if len(empty_seats) > 0:

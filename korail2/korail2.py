@@ -334,16 +334,16 @@ class SeniorPassenger(Passenger):
 
 
 class TrainType:
-    KTX = "00"  # "KTX, KTX-산천",
-    SAEMAEUL = "01"  # "새마을호",
-    MUGUNGHWA = "02"  # "무궁화호",
-    TONGGUEN = "03"  # "통근열차",
-    NURIRO = "04"  # "누리로",
+    KTX = "100"  # "KTX, KTX-산천",
+    SAEMAEUL = "101"  # "새마을호",
+    MUGUNGHWA = "102"  # "무궁화호",
+    TONGGUEN = "103"  # "통근열차",
+    NURIRO = "102"  # "누리로",
     ALL = "109"  # "전체",
-    AIRPORT = "06"  # "공항직통",
-    KTX_SANCHEON = "KTX-07"  # "KTX-산천",
-    ITX_SAEMAEUL = "ITX-08"  # "ITX-새마을",
-    ITX_CHEONGCHUN = "ITX-09"  # "ITX-청춘",
+    AIRPORT = "105"  # "공항직통",
+    KTX_SANCHEON = "100"  # "KTX-산천",
+    ITX_SAEMAEUL = "101"  # "ITX-새마을",
+    ITX_CHEONGCHUN = "104"  # "ITX-청춘",
 
     def __init__(self):
         raise NotImplementedError("Do not make instance.")
@@ -894,7 +894,7 @@ There are 4 options in ReserveOption class.
             'h_abrd_dt_to': '',
         }
 
-        r = self._session.post(url, data=data)
+        r = self._session.get(url, params=data)
         j = json.loads(r.text)
 
         if self._result_check(j):
@@ -924,7 +924,7 @@ There are 4 options in ReserveOption class.
             'Version': self._version,
             'Key': self._key,
         }
-        r = self._session.post(url, data=data)
+        r = self._session.get(url, params=data)
         j = json.loads(r.text)
         try:
             if self._result_check(j):
@@ -939,7 +939,7 @@ There are 4 options in ReserveOption class.
                             info[i] = info[i].encode('utf-8')
                         except:
                             pass
-                    reserves.append(Reservation(info))
+                    reserves.append(Reservation(info['train_infos']['train_info'][0]))
                 return reserves
         except NoResultsError:
             return []
@@ -957,7 +957,7 @@ There are 4 options in ReserveOption class.
             'txtJrnyCnt': rsv.journey_cnt,
             'hidRsvChgNo': rsv.rsv_chg_no,
         }
-        r = self._session.post(url, data=data)
+        r = self._session.get(url, data=data)
         j = json.loads(r.text)
         if self._result_check(j):
             return True
