@@ -10,6 +10,7 @@ import re
 import requests
 import itertools
 from datetime import datetime, timedelta
+from pprint import pprint
 
 try:
     # noinspection PyPackageRequirements
@@ -50,8 +51,8 @@ class Schedule(object):
     by `Suyeol Jeon <http://xoul.kr/>`_ at 2014.
     """
 
-    #: 기차 종류
-    #: 00: KTX
+    # : 기차 종류
+    # : 00: KTX
     #: 01: 새마을호
     #: 02: 무궁화호
     #: 03: 통근열차
@@ -133,10 +134,10 @@ class Schedule(object):
 
 
 class Train(Schedule):
-    #: 지연 시간 (hhmm)
+    # : 지연 시간 (hhmm)
     delay_time = None  # h_expct_dlay_hr
 
-    #: 예약 가능 여부
+    # : 예약 가능 여부
     reserve_possible = False  # h_rsv_psb_flg ('Y' or 'N')
 
     #: 예약 가능 여부
@@ -190,10 +191,10 @@ class Train(Schedule):
 class Ticket(Train):
     """Ticket object"""
 
-    #: 열차 번호
+    # : 열차 번호
     car_no = None  # h_srcar_no
 
-    #: 자리 갯수
+    # : 자리 갯수
     seat_no_count = None  # h_seat_cnt  ex) 001
 
     #: 자리 번호
@@ -335,7 +336,7 @@ class TrainType:
     MUGUNGHWA = "02"  # "무궁화호",
     TONGGUEN = "03"  # "통근열차",
     NURIRO = "04"  # "누리로",
-    ALL = "05"  # "전체",
+    ALL = "109"  # "전체",
     AIRPORT = "06"  # "공항직통",
     KTX_SANCHEON = "KTX-07"  # "KTX-산천",
     ITX_SAEMAEUL = "ITX-08"  # "ITX-새마을",
@@ -358,10 +359,10 @@ class ReserveOption:
 class Reservation(Train):
     """Revervation object"""
 
-    #: 예약번호
+    # : 예약번호
     rsv_id = None  # h_pnr_no
 
-    #: 여정 번호
+    # : 여정 번호
     journey_no = None  # txtJrnySqno
 
     #: 여정 카운트
@@ -707,30 +708,30 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
         url = KORAIL_SEARCH_SCHEDULE
         data = {
             'Device': self._device,
-            'Version': self._version,
-            'Key': self._key,
             'radJobId': '1',
-            'txtMenuId': '11',
             'selGoTrain': train_type,
+            'txtCardPsgCnt': '0',
+            'txtGdNo': '',
             'txtGoAbrdDt': date,  # '20140803',
-            'txtGoStart': dep,
             'txtGoEnd': arr,
             'txtGoHour': time,  # '071500',
+            'txtGoStart': dep,
+            'txtJobDv': '',
+            'txtMenuId': '11',
             'txtPsgFlg_1': adult_count,  # 어른
             'txtPsgFlg_2': child_count,  # 어린이
             'txtPsgFlg_3': senior_count,  # 경로
             'txtPsgFlg_4': '0',  # 장애인1
             'txtPsgFlg_5': '0',  # 장애인2
-            'txtCardPsgCnt': '0',
-            'txtSeatAttCd_2': '00',
-            'txtSeatAttCd_3': '00',
-            'txtSeatAttCd_4': '15',
-            'h_cert_no': '',
-            'h_pwd': '',
-            'txtJobDv': ''
+            'txtSeatAttCd_2': '000',
+            'txtSeatAttCd_3': '000',
+            'txtSeatAttCd_4': '015',
+            'txtTrnGpCd': train_type,
+            'Version': self._version,
         }
 
-        r = self._session.post(url, data=data)
+
+        r = self._session.get(url, params=data)
         j = json.loads(r.text)
 
         if self._result_check(j):
@@ -740,7 +741,7 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
 
             for info in train_infos:
                 for i in info:
-                    # noinspection PyBroadException
+                # noinspection PyBroadException
                     try:
                         info[i] = info[i].encode('utf-8')
                     except:
