@@ -64,6 +64,8 @@ class Schedule(object):
     #: 09: ITX-청춘
     train_type = None  # h_trn_clsf_cd, selGoTrain
 
+    train_group = None # h_trn_gp_cd
+
     #: 기차 종류 이름
     train_type_name = None  # h_trn_clsf_nm
 
@@ -100,6 +102,7 @@ class Schedule(object):
     def __init__(self, data):
         self.train_type = data.get('h_trn_clsf_cd')
         self.train_type_name = data.get('h_trn_clsf_nm')
+        self.train_group = data.get('h_trn_gp_cd')
         self.train_no = data.get('h_trn_no')
         self.delay_time = data.get('h_expct_dlay_hr')
 
@@ -727,6 +730,7 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
             'txtSeatAttCd_3': '000',
             'txtSeatAttCd_4': '015',
             'txtTrnGpCd': train_type,
+
             'Version': self._version,
         }
 
@@ -804,22 +808,25 @@ There are 4 options in ReserveOption class.
         if passengers is None:
             passengers = [AdultPassenger()]
 
-        passengers = Passenger.reduce(passengers)
+        print train
 
+        passengers = Passenger.reduce(passengers)
+        cnt = reduce(lambda x,y: x + y.count, passengers, 0)
         url = KORAIL_TICKETRESERVATION
         data = {
             'Device': self._device,
             'Version': self._version,
             'Key': self._key,
             'txtGdNo': '',
-            'txtTotPsgCnt': '',
-            'txtSeatAttCd1': '00',
-            'txtSeatAttCd2': '00',
-            'txtSeatAttCd3': '00',
-            'txtSeatAttCd4': '15',
-            'txtSeatAttCd5': '00',
-            'hidFreeFlg': '',
-            'txtStndFlg': '',
+            'txtJobId': '1101',
+            'txtTotPsgCnt': cnt,
+            'txtSeatAttCd1': '000',
+            'txtSeatAttCd2': '000',
+            'txtSeatAttCd3': '000',
+            'txtSeatAttCd4': '015',
+            'txtSeatAttCd5': '000',
+            'hidFreeFlg': 'N',
+            'txtStndFlg': 'N',
             'txtMenuId': '11',
             'txtSrcarCnt': '0',
             'txtJrnyCnt': '1',
@@ -835,6 +842,7 @@ There are 4 options in ReserveOption class.
             'txtRunDt1': train.run_date,
             'txtTrnClsfCd1': train.train_type,
             'txtPsrmClCd1': seat_type,
+            'txtTrnGpCd1': train.train_group,
             'txtChgFlg1': '',
 
             # 이하 여정정보2
@@ -864,7 +872,7 @@ There are 4 options in ReserveOption class.
             data.update(psg.get_dict(index))
             index += 1
 
-        r = self._session.post(url, data=data)
+        r = self._session.get(url, params=data)
         j = json.loads(r.text)
         if self._result_check(j):
             rsv_id = j['h_pnr_no']
