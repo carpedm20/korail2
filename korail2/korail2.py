@@ -34,6 +34,7 @@ KORAIL_SEARCH_SCHEDULE = "%s.seatMovie.ScheduleView" % KORAIL_MOBILE
 KORAIL_TICKETRESERVATION = "%s.certification.TicketReservation" % KORAIL_MOBILE
 KORAIL_REFUND = "%s.refunds.RefundsRequest" % KORAIL_MOBILE
 KORAIL_MYTICKETLIST = "%s.myTicket.MyTicketList" % KORAIL_MOBILE
+KORAIL_MYTICKET_SEAT = "%s.refunds.SelTicketInfo" % KORAIL_MOBILE
 
 KORAIL_MYRESERVATIONLIST = "%s.reservation.ReservationView" % KORAIL_MOBILE
 KORAIL_CANCEL = "%s.reservationCancel.ReservationCancelChk" % KORAIL_MOBILE
@@ -238,8 +239,7 @@ class Ticket(Train):
 
     def __init__(self, data):
         super(Ticket, self).__init__(data)
-        self.car_no = _get_utf8(data, 'h_srcar_no')
-        self.seat_no = _get_utf8(data, 'h_seat_no')
+
         self.seat_no_end = _get_utf8(data, 'h_seat_no_end')
         self.seat_no_count = int(_get_utf8(data, 'h_seat_cnt'))
 
@@ -250,6 +250,9 @@ class Ticket(Train):
         self.sale_info3 = _get_utf8(data, 'h_orgtk_sale_sqno')
         self.sale_info4 = _get_utf8(data, 'h_orgtk_ret_pwd')
         self.price = int(_get_utf8(data, 'h_rcvd_amt'))
+
+        self.car_no = _get_utf8(data, 'h_srcar_no')
+        self.seat_no = _get_utf8(data, 'h_seat_no')
 
     def __repr__(self):
         repr_str = super(Train, self).__repr__()
@@ -419,10 +422,13 @@ class Reservation(Train):
         self.journey_cnt = _get_utf8(data, 'txtJrnyCnt', "01")
         self.rsv_chg_no = _get_utf8(data, 'hidRsvChgNo', "00000")
 
+
         # 좌석정보 추가 업데이트 필요.
         # self.car_no = None
         # self.seat_no = None
         # self.seat_no_end = None
+
+
 
     def __repr__(self):
         repr_str = super(Reservation, self).__repr__()
@@ -904,10 +910,26 @@ There are 4 options in ReserveOption class.
 
             tickets = []
 
-            # http://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str
-            # 위 코드 검증후 일괄 적용
             for info in ticket_infos:
-                tickets.append(Ticket(info))
+                ticket = Ticket(info)
+                url = KORAIL_MYTICKET_SEAT
+                data = {
+                    'Device': self._device,
+                    'Version': self._version,
+                    'Key': self._key,
+                    'h_orgtk_wct_no': ticket.sale_info1,
+                    'h_orgtk_ret_sale_dt': ticket.sale_info2,
+                    'h_orgtk_sale_sqno': ticket.sale_info3,
+                    'h_orgtk_ret_pwd': ticket.sale_info4,
+                }
+                r = self._session.get(url, params=data)
+                j = json.loads(r.text)
+                if self._result_check(j):
+                    seat = j['seat_infos']['seat_info'][0]
+                    ticket.seat_no = _get_utf8(seat, 'h_seat_no')
+                    ticket.seat_no_end = None
+
+                tickets.append(ticket)
 
             return tickets
 
