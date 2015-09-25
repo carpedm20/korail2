@@ -24,6 +24,10 @@ __author__ = 'sng2c'
 
 
 class TestKorail(TestCase):
+
+    def thetime(self):
+        return date.today() + timedelta(days=30)
+
     def setUp(self):
 
         if not (hasattr(self, "koid") and hasattr(self, "kopw")):
@@ -144,12 +148,11 @@ class TestKorail(TestCase):
             self.assertTrue(False)
 
     def test_search_train(self):
-        tomorrow = date.today() + timedelta(days=30)
-        trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
+        trains = self.korail.search_train("서울", "부산", self.thetime().strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
         print trains
 
-        alltrains = self.korail.search_train_allday("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
+        alltrains = self.korail.search_train_allday("서울", "부산", self.thetime().strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(alltrains), len(trains), "tomorrow train search")
         print alltrains
 
@@ -178,9 +181,9 @@ class TestKorail(TestCase):
 
     def test_reserve_and_cancel(self):
         # self.skipTest("Not implemented")
-        after1hour = date.today() + timedelta(days=30)
 
-        trains = self.korail.search_train("서울", "부산", after1hour.strftime("%Y%m%d"), after1hour.strftime("%H%M%S"))
+
+        trains = self.korail.search_train("서울", "부산", self.thetime().strftime("%Y%m%d"), self.thetime().strftime("%H%M%S"))
 
         empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
         if len(empty_seats) > 0:
@@ -201,10 +204,9 @@ class TestKorail(TestCase):
 
     def test_reserve_and_cancel2(self):
         # self.skipTest("Not implemented")
-        tomorrow = date.today() + timedelta(days=1)
 
         try:
-            trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000")
+            trains = self.korail.search_train("서울", "부산", self.thetime().strftime("%Y%m%d"), "100000")
         except NoResultsError:
             self.skipTest("Sold out")
 
@@ -227,14 +229,14 @@ class TestKorail(TestCase):
 
     def test_reserve_and_cancel_multi(self):
         # self.skipTest("Not implemented")
-        tomorrow = date.today() + timedelta(days=1)
+
         passengers = (
             AdultPassenger(1),
             ChildPassenger(1),
             SeniorPassenger(1),
         )
         try:
-            trains = self.korail.search_train("서울", "부산", tomorrow.strftime("%Y%m%d"), "100000", passengers=passengers)
+            trains = self.korail.search_train("서울", "부산", self.thetime().strftime("%Y%m%d"), "100000", passengers=passengers)
         except NoResultsError:
             self.skipTest("Sold out")
 

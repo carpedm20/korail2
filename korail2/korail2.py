@@ -45,6 +45,13 @@ KORAIL_PAYMENT = "%s/ebizmw/PrdPkgMainList.do" % KORAIL_DOMAIN
 KORAIL_PAYMENT_VOUCHER = "%s/ebizmw/PrdPkgBoucherView.do" % KORAIL_DOMAIN
 
 
+def _get_utf8(data, key, default=None):
+    v = data.get(key, default)
+    if isinstance(v, basestring):
+        return v.encode('utf-8')
+    else:
+        return v
+
 class Schedule(object):
     """Korail train object. Highly inspired by `korail.py
     <https://raw.githubusercontent.com/devxoul/korail/master/korail/korail.py>`_
@@ -99,24 +106,26 @@ class Schedule(object):
     #: 운행 날짜 (yyyyMMdd)
     run_date = None  # h_run_dt
 
+
     def __init__(self, data):
-        self.train_type = data.get('h_trn_clsf_cd')
-        self.train_type_name = data.get('h_trn_clsf_nm')
-        self.train_group = data.get('h_trn_gp_cd')
-        self.train_no = data.get('h_trn_no')
-        self.delay_time = data.get('h_expct_dlay_hr')
 
-        self.dep_name = data.get('h_dpt_rs_stn_nm')
-        self.dep_code = data.get('h_dpt_rs_stn_cd')
-        self.dep_date = data.get('h_dpt_dt')
-        self.dep_time = data.get('h_dpt_tm')
+        self.train_type = _get_utf8(data, 'h_trn_clsf_cd')
+        self.train_type_name = _get_utf8(data, 'h_trn_clsf_nm')
+        self.train_group = _get_utf8(data, 'h_trn_gp_cd')
+        self.train_no = _get_utf8(data, 'h_trn_no')
+        self.delay_time = _get_utf8(data, 'h_expct_dlay_hr')
 
-        self.arr_name = data.get('h_arv_rs_stn_nm')
-        self.arr_code = data.get('h_arv_rs_stn_cd')
-        self.arr_date = data.get('h_arv_dt')
-        self.arr_time = data.get('h_arv_tm')
+        self.dep_name = _get_utf8(data, 'h_dpt_rs_stn_nm')
+        self.dep_code = _get_utf8(data, 'h_dpt_rs_stn_cd')
+        self.dep_date = _get_utf8(data, 'h_dpt_dt')
+        self.dep_time = _get_utf8(data, 'h_dpt_tm')
 
-        self.run_date = data.get('h_run_dt')
+        self.arr_name = _get_utf8(data, 'h_arv_rs_stn_nm')
+        self.arr_code = _get_utf8(data, 'h_arv_rs_stn_cd')
+        self.arr_date = _get_utf8(data, 'h_arv_dt')
+        self.arr_time = _get_utf8(data, 'h_arv_tm')
+
+        self.run_date = _get_utf8(data, 'h_run_dt')
 
     def __repr__(self):
         dep_time = "%s:%s" % (self.dep_time[:2], self.dep_time[2:4])
@@ -160,11 +169,11 @@ class Train(Schedule):
 
     def __init__(self, data):
         super(Train, self).__init__(data)
-        self.reserve_possible = data.get('h_rsv_psb_flg')
-        self.reserve_possible_name = data.get('h_rsv_psb_nm')
+        self.reserve_possible = _get_utf8(data, 'h_rsv_psb_flg')
+        self.reserve_possible_name = _get_utf8(data, 'h_rsv_psb_nm')
 
-        self.special_seat = data.get('h_spe_rsv_cd')
-        self.general_seat = data.get('h_gen_rsv_cd')
+        self.special_seat = _get_utf8(data, 'h_spe_rsv_cd')
+        self.general_seat = _get_utf8(data, 'h_gen_rsv_cd')
 
     def __repr__(self):
         repr_str = super(Train, self).__repr__()
@@ -229,18 +238,18 @@ class Ticket(Train):
 
     def __init__(self, data):
         super(Ticket, self).__init__(data)
-        self.car_no = data.get('h_srcar_no')
-        self.seat_no = data.get('h_seat_no')
-        self.seat_no_end = data.get('h_seat_no_end')
-        self.seat_no_count = int(data.get('h_seat_cnt'))
+        self.car_no = _get_utf8(data, 'h_srcar_no')
+        self.seat_no = _get_utf8(data, 'h_seat_no')
+        self.seat_no_end = _get_utf8(data, 'h_seat_no_end')
+        self.seat_no_count = int(_get_utf8(data, 'h_seat_cnt'))
 
-        self.buyer_name = data.get('h_buy_ps_nm')
-        self.sale_date = data.get('h_orgtk_sale_dt')
-        self.sale_info1 = data.get('h_orgtk_wct_no')
-        self.sale_info2 = data.get('h_orgtk_ret_sale_dt')
-        self.sale_info3 = data.get('h_orgtk_sale_sqno')
-        self.sale_info4 = data.get('h_orgtk_ret_pwd')
-        self.price = int(data.get('h_rcvd_amt'))
+        self.buyer_name = _get_utf8(data, 'h_buy_ps_nm')
+        self.sale_date = _get_utf8(data, 'h_orgtk_sale_dt')
+        self.sale_info1 = _get_utf8(data, 'h_orgtk_wct_no')
+        self.sale_info2 = _get_utf8(data, 'h_orgtk_ret_sale_dt')
+        self.sale_info3 = _get_utf8(data, 'h_orgtk_sale_sqno')
+        self.sale_info4 = _get_utf8(data, 'h_orgtk_ret_pwd')
+        self.price = int(_get_utf8(data, 'h_rcvd_amt'))
 
     def __repr__(self):
         repr_str = super(Train, self).__repr__()
@@ -329,7 +338,7 @@ class ChildPassenger(Passenger):
 
 # noinspection PyMissingConstructor
 class SeniorPassenger(Passenger):
-    def __init__(self, count=1, discount_type='P41', card='', card_no='', card_pw=''):
+    def __init__(self, count=1, discount_type='131', card='', card_no='', card_pw=''):
         Passenger.__init_internal__(self, '1', count, discount_type, card, card_no, card_pw)
 
 
@@ -398,17 +407,17 @@ class Reservation(Train):
     def __init__(self, data):
         super(Reservation, self).__init__(data)
         # 이 두 필드가 결과에 빠져있음
-        self.dep_date = data.get('h_run_dt')
-        self.arr_date = data.get('h_run_dt')
+        self.dep_date = _get_utf8(data, 'h_run_dt')
+        self.arr_date = _get_utf8(data, 'h_run_dt')
 
-        self.rsv_id = data.get('h_pnr_no')
-        self.seat_no_count = int(data.get('h_tot_seat_cnt'))
-        self.buy_limit_date = data.get('h_ntisu_lmt_dt')
-        self.buy_limit_time = data.get('h_ntisu_lmt_tm')
-        self.price = int(data.get('h_rsv_amt'))
-        self.journey_no = data.get('txtJrnySqno', "001")
-        self.journey_cnt = data.get('txtJrnyCnt', "01")
-        self.rsv_chg_no = data.get('hidRsvChgNo', "00000")
+        self.rsv_id = _get_utf8(data, 'h_pnr_no')
+        self.seat_no_count = int(_get_utf8(data, 'h_tot_seat_cnt'))
+        self.buy_limit_date = _get_utf8(data, 'h_ntisu_lmt_dt')
+        self.buy_limit_time = _get_utf8(data, 'h_ntisu_lmt_tm')
+        self.price = int(_get_utf8(data, 'h_rsv_amt'))
+        self.journey_no = _get_utf8(data, 'txtJrnySqno', "001")
+        self.journey_cnt = _get_utf8(data, 'txtJrnyCnt', "01")
+        self.rsv_chg_no = _get_utf8(data, 'hidRsvChgNo', "00000")
 
         # 좌석정보 추가 업데이트 필요.
         # self.car_no = None
@@ -577,8 +586,8 @@ When you want change ID using existing object,
             print j['h_msg_txt']
 
         if j['strResult'] == 'FAIL':
-            h_msg_cd = j['h_msg_cd'].encode('utf-8')
-            h_msg_txt = j['h_msg_txt'].encode('utf-8')
+            h_msg_cd = _get_utf8(j, 'h_msg_cd')
+            h_msg_txt = _get_utf8(j, 'h_msg_txt')
             # P058 : 로그인 필요
             matched_error = filter(lambda x: h_msg_cd in x, (NoResultsError, NeedToLoginError, SoldOutError))
             if matched_error:
@@ -744,13 +753,6 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
             trains = []
 
             for info in train_infos:
-                for i in info:
-                # noinspection PyBroadException
-                    try:
-                        info[i] = info[i].encode('utf-8')
-                    except:
-                        pass
-
                 trains.append(Train(info))
 
             if not include_no_seats:
@@ -905,13 +907,6 @@ There are 4 options in ReserveOption class.
             # http://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str
             # 위 코드 검증후 일괄 적용
             for info in ticket_infos:
-                for i in info:
-                    # noinspection PyBroadException
-                    try:
-                        info[i] = info[i].encode('utf-8')
-                    except:
-                        pass
-
                 tickets.append(Ticket(info))
 
             return tickets
@@ -933,14 +928,8 @@ There are 4 options in ReserveOption class.
                 reserves = []
 
                 for info in rsv_infos:
-                    for i in info:
-                        for tinfo in info['train_infos']['train_info']:
-                            # noinspection PyBroadException
-                            try:
-                                tinfo[i] = tinfo[i].encode('utf-8')
-                            except:
-                                pass
-                            reserves.append(Reservation(tinfo))
+                    for tinfo in info['train_infos']['train_info']:
+                        reserves.append(Reservation(tinfo))
                 return reserves
         except NoResultsError:
             return []
