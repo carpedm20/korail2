@@ -45,6 +45,8 @@ KORAIL_EVENT = "%s.common.event" % KORAIL_MOBILE
 KORAIL_PAYMENT = "%s/ebizmw/PrdPkgMainList.do" % KORAIL_DOMAIN
 KORAIL_PAYMENT_VOUCHER = "%s/ebizmw/PrdPkgBoucherView.do" % KORAIL_DOMAIN
 
+DEFAULT_USER_AGENT = "Dalvik/2.1.0 (Linux; U; Android 5.1.1; Nexus 4 Build/LMY48T)"
+
 
 def _get_utf8(data, key, default=None):
     v = data.get(key, default)
@@ -501,6 +503,7 @@ class Korail(object):
     email = None
 
     def __init__(self, korail_id, korail_pw, auto_login=True, want_feedback=False):
+        self._session.headers.update({'User-Agent': DEFAULT_USER_AGENT})
         self.korail_id = korail_id
         self.korail_pw = korail_pw
         self.want_feedback = want_feedback
