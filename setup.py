@@ -70,6 +70,7 @@ setup(
     ],
     install_requires=[
         'requests',
+        'six'
     ],
     use_2to3=True
 )

@@ -6,10 +6,13 @@
     :copyright: (c) 2014 by Taehoon Kim.
     :license: BSD, see LICENSE for more details.
 """
+from __future__ import unicode_literals
 import re
 import requests
 import itertools
+import sys
 from datetime import datetime, timedelta
+from six import with_metaclass
 from pprint import pprint
 
 try:
@@ -17,6 +20,13 @@ try:
     import simplejson as json
 except ImportError:
     import json
+
+
+def _python3():
+    return sys.version_info > (3, 0)
+
+if _python3():
+    from functools import reduce
 
 EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
 PHONE_NUMBER_REGEX = re.compile(r"(\d{3})-(\d{3,4})-(\d{4})")
@@ -50,10 +60,15 @@ DEFAULT_USER_AGENT = "Dalvik/2.1.0 (Linux; U; Android 5.1.1; Nexus 4 Build/LMY48
 
 def _get_utf8(data, key, default=None):
     v = data.get(key, default)
+
+    if _python3():
+        return v
+
     if isinstance(v, basestring):
         return v.encode('utf-8')
     else:
         return v
+
 
 class Schedule(object):
     """Korail train object. Highly inspired by `korail.py
@@ -240,21 +255,22 @@ class Ticket(Train):
     price = None  # h_rcvd_amt  ex) 00013900
 
     def __init__(self, data):
-        super(Ticket, self).__init__(data)
+        raw_data = data['ticket_list'][0]['train_info'][0]
+        super(Ticket, self).__init__(raw_data)
 
-        self.seat_no_end = _get_utf8(data, 'h_seat_no_end')
-        self.seat_no_count = int(_get_utf8(data, 'h_seat_cnt'))
+        self.seat_no_end = _get_utf8(raw_data, 'h_seat_no_end')
+        self.seat_no_count = int(_get_utf8(raw_data, 'h_seat_cnt'))
 
-        self.buyer_name = _get_utf8(data, 'h_buy_ps_nm')
-        self.sale_date = _get_utf8(data, 'h_orgtk_sale_dt')
-        self.sale_info1 = _get_utf8(data, 'h_orgtk_wct_no')
-        self.sale_info2 = _get_utf8(data, 'h_orgtk_ret_sale_dt')
-        self.sale_info3 = _get_utf8(data, 'h_orgtk_sale_sqno')
-        self.sale_info4 = _get_utf8(data, 'h_orgtk_ret_pwd')
-        self.price = int(_get_utf8(data, 'h_rcvd_amt'))
+        self.buyer_name = _get_utf8(raw_data, 'h_buy_ps_nm')
+        self.sale_date = _get_utf8(raw_data, 'h_orgtk_sale_dt')
+        self.sale_info1 = _get_utf8(raw_data, 'h_orgtk_wct_no')
+        self.sale_info2 = _get_utf8(raw_data, 'h_orgtk_ret_sale_dt')
+        self.sale_info3 = _get_utf8(raw_data, 'h_orgtk_sale_sqno')
+        self.sale_info4 = _get_utf8(raw_data, 'h_orgtk_ret_pwd')
+        self.price = int(_get_utf8(raw_data, 'h_rcvd_amt'))
 
-        self.car_no = _get_utf8(data, 'h_srcar_no')
-        self.seat_no = _get_utf8(data, 'h_seat_no')
+        self.car_no = _get_utf8(raw_data, 'h_srcar_no')
+        self.seat_no = _get_utf8(raw_data, 'h_seat_no')
 
     def __repr__(self):
         repr_str = super(Train, self).__repr__()
@@ -286,11 +302,11 @@ class Passenger:
     @staticmethod
     def reduce(passenger_list):
         """Reduce passenger's list."""
-        if filter(lambda x: not isinstance(x, Passenger), passenger_list):
+        if list(filter(lambda x: not isinstance(x, Passenger), passenger_list)):
             raise TypeError("Passengers must be based on Passenger")
 
         groups = itertools.groupby(passenger_list, lambda x: x.group_key())
-        return filter(lambda x: x.count > 0, [reduce(lambda a, b: a + b, g) for k, g in groups])
+        return list(filter(lambda x: x.count > 0, [reduce(lambda a, b: a + b, g) for k, g in groups]))
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Passenger is abstract class. Do not make instance.")
@@ -446,14 +462,15 @@ class Reservation(Train):
         return repr_str
 
 
-class KorailError(Exception):
-    """Korail Base Error Class"""
+class ExceptionForm(type):
     codes = set()
 
-    # noinspection PyPep8Naming,PyUnresolvedReferences
-    class __metaclass__(type):
-        def __contains__(cls, item):
-            return item in cls.codes
+    def __contains__(cls, item):
+        return item in cls.codes
+
+
+class KorailError(with_metaclass(ExceptionForm, Exception)):
+    """Korail Base Error Class"""
 
     def __init__(self, msg, code):
         self.msg = msg
@@ -476,6 +493,7 @@ class NoResultsError(KorailError):
     codes = {'P100',
              'WRG000000',
              'WRD000061',  # 직통열차는 없지만, 환승으로 조회 가능합니다.
+             'WRT300005'
     }
 
     def __init__(self, code=None):
@@ -592,13 +610,13 @@ When you want change ID using existing object,
     def _result_check(self, j):
         """Result data check"""
         if self.want_feedback:
-            print j['h_msg_txt']
+            print(j['h_msg_txt'])
 
         if j['strResult'] == 'FAIL':
             h_msg_cd = _get_utf8(j, 'h_msg_cd')
             h_msg_txt = _get_utf8(j, 'h_msg_txt')
             # P058 : 로그인 필요
-            matched_error = filter(lambda x: h_msg_cd in x, (NoResultsError, NeedToLoginError, SoldOutError))
+            matched_error = list(filter(lambda x: h_msg_cd in x, (NoResultsError, NeedToLoginError, SoldOutError)))
             if matched_error:
                 raise matched_error[0](h_msg_cd)
             else:
@@ -623,7 +641,7 @@ When you want change ID using existing object,
                 break
 
         if not include_no_seats:
-            all_trains = filter(lambda x: x.has_seat(), all_trains)
+            all_trains = list(filter(lambda x: x.has_seat(), all_trains))
 
         if len(all_trains) == 0:
             raise NoResultsError()
@@ -722,9 +740,9 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
 
         passengers = Passenger.reduce(passengers)
 
-        adult_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, AdultPassenger), passengers), 0)
-        child_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, ChildPassenger), passengers), 0)
-        senior_count = reduce(lambda a, b: a + b.count, filter(lambda x: isinstance(x, SeniorPassenger), passengers), 0)
+        adult_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, AdultPassenger), passengers)), 0)
+        child_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, ChildPassenger), passengers)), 0)
+        senior_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, SeniorPassenger), passengers)), 0)
 
         url = KORAIL_SEARCH_SCHEDULE
         data = {
@@ -765,7 +783,7 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
                 trains.append(Train(info))
 
             if not include_no_seats:
-                trains = filter(lambda x: x.has_seat(), trains)
+                trains = list(filter(lambda x: x.has_seat(), trains))
 
             if len(trains) == 0:
                 raise NoResultsError()
@@ -819,7 +837,7 @@ There are 4 options in ReserveOption class.
         if passengers is None:
             passengers = [AdultPassenger()]
 
-        print train
+        print(train)
 
         passengers = Passenger.reduce(passengers)
         cnt = reduce(lambda x,y: x + y.count, passengers, 0)
@@ -887,7 +905,7 @@ There are 4 options in ReserveOption class.
         j = json.loads(r.text)
         if self._result_check(j):
             rsv_id = j['h_pnr_no']
-            rsvlist = filter(lambda x: x.rsv_id == rsv_id, self.reservations())
+            rsvlist = list(filter(lambda x: x.rsv_id == rsv_id, self.reservations()))
             if len(rsvlist) == 1:
                 return rsvlist[0]
 
@@ -907,34 +925,36 @@ There are 4 options in ReserveOption class.
 
         r = self._session.get(url, params=data)
         j = json.loads(r.text)
+        try:
+            if self._result_check(j):
+                ticket_infos = j['reservation_list']
 
-        if self._result_check(j):
-            ticket_infos = j['tk_infos']['tk_info']
+                tickets = []
 
-            tickets = []
+                for info in ticket_infos:
+                    ticket = Ticket(info)
+                    url = KORAIL_MYTICKET_SEAT
+                    data = {
+                        'Device': self._device,
+                        'Version': self._version,
+                        'Key': self._key,
+                        'h_orgtk_wct_no': ticket.sale_info1,
+                        'h_orgtk_ret_sale_dt': ticket.sale_info2,
+                        'h_orgtk_sale_sqno': ticket.sale_info3,
+                        'h_orgtk_ret_pwd': ticket.sale_info4,
+                    }
+                    r = self._session.get(url, params=data)
+                    j = json.loads(r.text)
+                    if self._result_check(j):
+                        seat = j['ticket_infos']['ticket_info'][0]['tk_seat_info'][0]
+                        ticket.seat_no = _get_utf8(seat, 'h_seat_no')
+                        ticket.seat_no_end = None
 
-            for info in ticket_infos:
-                ticket = Ticket(info)
-                url = KORAIL_MYTICKET_SEAT
-                data = {
-                    'Device': self._device,
-                    'Version': self._version,
-                    'Key': self._key,
-                    'h_orgtk_wct_no': ticket.sale_info1,
-                    'h_orgtk_ret_sale_dt': ticket.sale_info2,
-                    'h_orgtk_sale_sqno': ticket.sale_info3,
-                    'h_orgtk_ret_pwd': ticket.sale_info4,
-                }
-                r = self._session.get(url, params=data)
-                j = json.loads(r.text)
-                if self._result_check(j):
-                    seat = j['seat_infos']['seat_info'][0]
-                    ticket.seat_no = _get_utf8(seat, 'h_seat_no')
-                    ticket.seat_no_end = None
+                    tickets.append(ticket)
 
-                tickets.append(ticket)
-
-            return tickets
+                return tickets
+        except NoResultsError:
+            return []
 
     def reservations(self):
         """ Get My Reservations """
