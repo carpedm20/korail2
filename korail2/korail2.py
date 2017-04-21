@@ -6,7 +6,6 @@
     :copyright: (c) 2014 by Taehoon Kim.
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import unicode_literals
 import re
 import requests
 import itertools
