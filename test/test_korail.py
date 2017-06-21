@@ -31,14 +31,13 @@ class TestKorail(TestCase):
     def setUp(self):
 
         if not (hasattr(self, "koid") and hasattr(self, "kopw")):
-            filepath = "korail_idpw.txt"
-            if os.path.exists(filepath):
-                with open(filepath) as idpw:
-                    self.koid = idpw.readline().strip()
-                    self.kopw = idpw.readline().strip()
+            
+            if os.environ['KORAIL_ID'] and os.environ['KORAIL_PW']:
+                self.koid = os.environ['KORAIL_ID']
+                self.kopw = os.environ['KORAIL_PW']
                 self.korail = Korail(self.koid, self.kopw, auto_login=False)
             else:
-                raise Exception("No file at %s" % filepath)
+                raise Exception("env KORAIL_ID, KORAIL_PW not defined")
 
         if not self.korail.logined:
             if not self.korail.login():
