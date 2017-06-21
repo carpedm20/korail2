@@ -10,4 +10,5 @@ python:
 install:
   - python setup.py -q install
 # command to run tests
-script: pytest
+script: 
+  - python -m unittest discover
