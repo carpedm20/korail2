@@ -1,6 +1,8 @@
 Korail2
 =======
 
+[![Build Status](https://travis-ci.org/sng2c/korail2.svg?branch=master)](https://travis-ci.org/sng2c/korail2)
+
 Korail (www.letskorail.com) wrapper for Python.
 
 This project was inspired from [korail](https://github.com/devxoul/korail) of [devxoul](https://github.com/devxoul).
