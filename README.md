@@ -1,7 +1,7 @@
 Korail2
 =======
 
-[![Build Status](https://travis-ci.org/sng2c/korail2.svg?branch=master)](https://travis-ci.org/sng2c/korail2)
+[![Build Status](https://travis-ci.org/carpedm20/korail2.svg?branch=master)](https://travis-ci.org/carpedm20/korail2)
 
 Korail (www.letskorail.com) wrapper for Python.
 
