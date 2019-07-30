@@ -31,7 +31,7 @@ except ImportError:
     from setuptools import setup
 
 # detect the current version
-version = '0.2.8'
+version = '0.3.0'
 
 import codecs
 

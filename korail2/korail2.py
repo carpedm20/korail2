@@ -512,8 +512,8 @@ class Korail(object):
     _session = requests.session()
 
     _device = 'AD'
-    _version = '150718001'
-    _key = 'korail01234567890'
+    _version = '190617001'
+    _key = 'korail1234567890'
 
     membership_number = None
     name = None
@@ -576,7 +576,8 @@ When you want change ID using existing object,
         url = KORAIL_LOGIN
         data = {
             'Device': self._device,
-            'Version': self._version,
+            'Version': '150718001', # HACK
+            #'Version': self._version,
             # 2 : for membership number,
             # 4 : for phone number,
             # 5 : for email,
