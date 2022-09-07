@@ -729,10 +729,12 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
     ...
 
 """
+        # NOTE: 버그 수정. 코레일에 열차 티켓 리스트 API 요청시 한국시간을 기준으로 함.
+        kst = timezone(timedelta(hours=9))
         if date is None:
-            date = datetime.now().strftime("%Y%m%d")
+            date = datetime.utcnow().astimezone(kst).strftime("%Y%m%d")
         if time is None:
-            time = datetime.now().strftime("%H%M%S")
+            time = datetime.utcnow().astimezone(kst).strftime("%H%M%S")
 
         if passengers is None:
             passengers = [AdultPassenger()]
