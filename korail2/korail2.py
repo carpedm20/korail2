@@ -13,7 +13,7 @@ import sys
 from datetime import datetime, timedelta
 from six import with_metaclass
 from pprint import pprint
-from pytz import timezone
+from datetime import timezone
 
 try:
     # noinspection PyPackageRequirements
