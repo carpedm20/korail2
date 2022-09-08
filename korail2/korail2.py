@@ -589,7 +589,6 @@ When you want change ID using existing object,
 
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
-
         if j['strResult'] == 'SUCC' and j.get('strMbCrdNo') is not None:
             self._key = j['Key']
             self.membership_number = j['strMbCrdNo']
