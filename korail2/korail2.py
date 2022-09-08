@@ -15,7 +15,6 @@ from six import with_metaclass
 from pprint import pprint
 from pytz import timezone
 
-
 try:
     # noinspection PyPackageRequirements
     import simplejson as json
