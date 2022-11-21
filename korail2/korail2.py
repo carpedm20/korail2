@@ -750,7 +750,7 @@ There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPass
 
         adult_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, AdultPassenger), passengers)), 0)
         child_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, ChildPassenger), passengers)), 0)
-        toddler_count = reduce(lambda a, b: a + b.count, list([x for x in passengers if isinstance(x, ToddlerPassenger)]), 0)
+        toddler_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, ToddlerPassenger), passengers)), 0)
         senior_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, SeniorPassenger), passengers)), 0)
 
         url = KORAIL_SEARCH_SCHEDULE
