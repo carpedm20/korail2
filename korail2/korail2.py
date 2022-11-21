@@ -13,7 +13,6 @@ import sys
 from datetime import datetime, timedelta
 from six import with_metaclass
 from pprint import pprint
-from datetime import timezone
 
 try:
     # noinspection PyPackageRequirements
@@ -64,7 +63,7 @@ def _get_utf8(data, key, default=None):
     if _python3():
         return v
 
-    if isinstance(v, basestring):
+    if isinstance(v, str):
         return v.encode('utf-8')
     else:
         return v
@@ -302,11 +301,11 @@ class Passenger:
     @staticmethod
     def reduce(passenger_list):
         """Reduce passenger's list."""
-        if list(filter(lambda x: not isinstance(x, Passenger), passenger_list)):
+        if list([x for x in passenger_list if not isinstance(x, Passenger)]):
             raise TypeError("Passengers must be based on Passenger")
 
         groups = itertools.groupby(passenger_list, lambda x: x.group_key())
-        return list(filter(lambda x: x.count > 0, [reduce(lambda a, b: a + b, g) for k, g in groups]))
+        return list([x for x in [reduce(lambda a, b: a + b, g) for k, g in groups] if x.count > 0])
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Passenger is abstract class. Do not make instance.")
@@ -354,6 +353,12 @@ class AdultPassenger(Passenger):
 # noinspection PyMissingConstructor
 class ChildPassenger(Passenger):
     def __init__(self, count=1, discount_type='000', card='', card_no='', card_pw=''):
+        Passenger.__init_internal__(self, '3', count, discount_type, card, card_no, card_pw)
+
+
+# noinspection PyMissingConstructor
+class ToddlerPassenger(Passenger):
+    def __init__(self, count=1, discount_type='321', card='', card_no='', card_pw=''):
         Passenger.__init_internal__(self, '3', count, discount_type, card, card_no, card_pw)
 
 
@@ -540,7 +545,7 @@ class Korail(object):
 
 First, you need to create a Korail object.
 
-    >>> from korail2 import *
+    >>> from .korail2 import *
     >>> korail = Korail("12345678", YOUR_PASSWORD) # with membership number
     >>> korail = Korail("carpedm20@gmail.com", YOUR_PASSWORD) # with email
     >>> korail = Korail("010-9964-xxxx", YOUR_PASSWORD) # with phone number
@@ -589,7 +594,7 @@ When you want change ID using existing object,
 
         r = self._session.post(url, data=data)
         j = json.loads(r.text)
-
+        
         if j['strResult'] == 'SUCC' and j.get('strMbCrdNo') is not None:
             self._key = j['Key']
             self.membership_number = j['strMbCrdNo']
@@ -610,13 +615,13 @@ When you want change ID using existing object,
     def _result_check(self, j):
         """Result data check"""
         if self.want_feedback:
-            print(j['h_msg_txt'])
+            print((j['h_msg_txt']))
 
         if j['strResult'] == 'FAIL':
             h_msg_cd = _get_utf8(j, 'h_msg_cd')
             h_msg_txt = _get_utf8(j, 'h_msg_txt')
             # P058 : 로그인 필요
-            matched_error = list(filter(lambda x: h_msg_cd in x, (NoResultsError, NeedToLoginError, SoldOutError)))
+            matched_error = list([x for x in (NoResultsError, NeedToLoginError, SoldOutError) if h_msg_cd in x])
             if matched_error:
                 raise matched_error[0](h_msg_cd)
             else:
@@ -641,7 +646,7 @@ When you want change ID using existing object,
                 break
 
         if not include_no_seats:
-            all_trains = list(filter(lambda x: x.has_seat(), all_trains))
+            all_trains = list([x for x in all_trains if x.has_seat()])
 
         if len(all_trains) == 0:
             raise NoResultsError()
@@ -702,10 +707,10 @@ When you want to see trains which has no seats.
 
 `passengers` is a list(or tuple) of Passeger Objects.
 By this, you can search for multiple passengers.
-There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPassenger.
+There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPassenger and SeniorPassenger.
 
-    # for 1 adult, 1 child
-    >>> psgrs = [AdultPassenger(), ChildPassenger()]
+    # for 1 adult, 1 child, 1 toddler
+    >>> psgrs = [AdultPassenger(), ChildPassenger(), ToddlerPassenger()]
 
     # for 2 adults, 1 child
     >>> psgrs = [AdultPassenger(2), ChildPassenger(1)]
@@ -727,24 +732,23 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
     >>> trains = korail.search_train(dep, arr, date, time, passengers=psgrs)
     ...
     >>> korail.reserve(trains[0], psgrs)
-    ...
+    ... 
 
 """
-        # NOTE: 버그 수정. 코레일에 열차 티켓 리스트 API 요청시 한국시간을 기준으로 함.
-        kst = timezone(timedelta(hours=9))
         if date is None:
-            date = datetime.utcnow().astimezone(kst).strftime("%Y%m%d")
+            date = datetime.now().strftime("%Y%m%d")
         if time is None:
-            time = datetime.utcnow().astimezone(kst).strftime("%H%M%S")
+            time = datetime.now().strftime("%H%M%S")
 
         if passengers is None:
             passengers = [AdultPassenger()]
 
         passengers = Passenger.reduce(passengers)
 
-        adult_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, AdultPassenger), passengers)), 0)
-        child_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, ChildPassenger), passengers)), 0)
-        senior_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, SeniorPassenger), passengers)), 0)
+        adult_count = reduce(lambda a, b: a + b.count, list([x for x in passengers if isinstance(x, AdultPassenger)]), 0)
+        child_count = reduce(lambda a, b: a + b.count, list([x for x in passengers if isinstance(x, ChildPassenger)]), 0)
+        toddler_count = reduce(lambda a, b: a + b.count, list([x for x in passengers if isinstance(x, ToddlerPassenger)]), 0)
+        senior_count = reduce(lambda a, b: a + b.count, list([x for x in passengers if isinstance(x, SeniorPassenger)]), 0)
 
         url = KORAIL_SEARCH_SCHEDULE
         data = {
@@ -761,9 +765,10 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
             'txtMenuId': '11',
             'txtPsgFlg_1': adult_count,  # 어른
             'txtPsgFlg_2': child_count,  # 어린이
+            'txtPsgFlg_8': toddler_count,  # 유아
             'txtPsgFlg_3': senior_count,  # 경로
-            'txtPsgFlg_4': '0',  # 장애인1
-            'txtPsgFlg_5': '0',  # 장애인2
+            'txtPsgFlg_4': '0',  # 중증
+            'txtPsgFlg_5': '0',  # 경증
             'txtSeatAttCd_2': '000',
             'txtSeatAttCd_3': '000',
             'txtSeatAttCd_4': '015',
@@ -785,7 +790,7 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
                 trains.append(Train(info))
 
             if not include_no_seats:
-                trains = list(filter(lambda x: x.has_seat(), trains))
+                trains = list([x for x in trains if x.has_seat()])
 
             if len(trains) == 0:
                 raise NoResultsError()
@@ -907,7 +912,7 @@ There are 4 options in ReserveOption class.
         j = json.loads(r.text)
         if self._result_check(j):
             rsv_id = j['h_pnr_no']
-            rsvlist = list(filter(lambda x: x.rsv_id == rsv_id, self.reservations()))
+            rsvlist = list([x for x in self.reservations() if x.rsv_id == rsv_id])
             if len(rsvlist) == 1:
                 return rsvlist[0]
 
@@ -998,3 +1003,4 @@ There are 4 options in ReserveOption class.
         j = json.loads(r.text)
         if self._result_check(j):
             return True
+
