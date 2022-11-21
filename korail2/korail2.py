@@ -358,6 +358,12 @@ class ChildPassenger(Passenger):
 
 
 # noinspection PyMissingConstructor
+class ToddlerPassenger(Passenger):
+    def __init__(self, count=1, discount_type='321', card='', card_no='', card_pw=''):
+        Passenger.__init_internal__(self, '3', count, discount_type, card, card_no, card_pw)
+
+
+# noinspection PyMissingConstructor
 class SeniorPassenger(Passenger):
     def __init__(self, count=1, discount_type='131', card='', card_no='', card_pw=''):
         Passenger.__init_internal__(self, '1', count, discount_type, card, card_no, card_pw)
@@ -702,10 +708,10 @@ When you want to see trains which has no seats.
 
 `passengers` is a list(or tuple) of Passeger Objects.
 By this, you can search for multiple passengers.
-There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPassenger.
+There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPassenger and SeniorPassenger.
 
-    # for 1 adult, 1 child
-    >>> psgrs = [AdultPassenger(), ChildPassenger()]
+    # for 1 adult, 1 child, 1 toddler
+    >>> psgrs = [AdultPassenger(), ChildPassenger(), ToddlerPassenger()]
 
     # for 2 adults, 1 child
     >>> psgrs = [AdultPassenger(2), ChildPassenger(1)]
@@ -744,6 +750,7 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
 
         adult_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, AdultPassenger), passengers)), 0)
         child_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, ChildPassenger), passengers)), 0)
+        toddler_count = reduce(lambda a, b: a + b.count, list([x for x in passengers if isinstance(x, ToddlerPassenger)]), 0)
         senior_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, SeniorPassenger), passengers)), 0)
 
         url = KORAIL_SEARCH_SCHEDULE
@@ -761,9 +768,10 @@ There are 3 types of Passengers now, AdultPassenger, ChildPassenger and SeniorPa
             'txtMenuId': '11',
             'txtPsgFlg_1': adult_count,  # 어른
             'txtPsgFlg_2': child_count,  # 어린이
+            'txtPsgFlg_8': toddler_count,  # 유아
             'txtPsgFlg_3': senior_count,  # 경로
-            'txtPsgFlg_4': '0',  # 장애인1
-            'txtPsgFlg_5': '0',  # 장애인2
+            'txtPsgFlg_4': '0',  # 중증 장애인
+            'txtPsgFlg_5': '0',  # 경증 장애인
             'txtSeatAttCd_2': '000',
             'txtSeatAttCd_3': '000',
             'txtSeatAttCd_4': '015',
