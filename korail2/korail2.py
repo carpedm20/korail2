@@ -13,7 +13,6 @@ import sys
 from datetime import datetime, timedelta
 from six import with_metaclass
 from pprint import pprint
-from datetime import timezone
 
 try:
     # noinspection PyPackageRequirements
@@ -736,12 +735,12 @@ There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPass
     ...
 
 """
-        # NOTE: 버그 수정. 코레일에 열차 티켓 리스트 API 요청시 한국시간을 기준으로 함.
-        kst = timezone(timedelta(hours=9))
+        # 코레일에 열차 티켓 리스트 API 요청시 한국시간을 기준으로 함.
+        kst_now = datetime.utcnow() + timedelta(hours=9)
         if date is None:
-            date = datetime.utcnow().astimezone(kst).strftime("%Y%m%d")
+            date = kst_now.strftime("%Y%m%d")
         if time is None:
-            time = datetime.utcnow().astimezone(kst).strftime("%H%M%S")
+            time = kst_now.strftime("%H%M%S")
 
         if passengers is None:
             passengers = [AdultPassenger()]
