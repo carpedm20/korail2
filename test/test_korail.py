@@ -109,14 +109,14 @@ class TestKorail(TestCase):
     def test__result_check(self):
         try:
             self.korail._result_check({})
-        except KorailError, e:
+        except KorailError:
             self.assertTrue(False)
-        except Exception, e:
+        except Exception:
             self.assertTrue(True)
 
         try:
             self.korail._result_check({"strResult": "SUCC", "h_msg_cd": "P000", "h_msg_txt": "UNKNOWN"})
-        except Exception, e:
+        except Exception:
             self.assertTrue(False)
         else:
             self.assertTrue(True)
@@ -125,7 +125,7 @@ class TestKorail(TestCase):
             self.korail._result_check({"strResult": "FAIL", "h_msg_cd": "P000", "h_msg_txt": "UNKNOWN"})
         except KorailError:
             self.assertTrue(True)
-        except Exception, e:
+        except Exception:
             self.assertTrue(False)
 
         try:
@@ -134,7 +134,7 @@ class TestKorail(TestCase):
             self.assertTrue(True)
         except KorailError:
             self.assertTrue(False)
-        except Exception, e:
+        except Exception:
             self.assertTrue(False)
 
         try:
@@ -143,7 +143,7 @@ class TestKorail(TestCase):
             self.assertTrue(True)
         except KorailError:
             self.assertTrue(False)
-        except Exception, e:
+        except Exception:
             self.assertTrue(False)
 
     def test_search_train(self):
@@ -174,7 +174,7 @@ class TestKorail(TestCase):
             self.assertIsInstance(reserves, list)
 
             # print reserves
-        except Exception, e:
+        except Exception:
             self.fail(e.message)
             # self.skipTest(e.message)
 
