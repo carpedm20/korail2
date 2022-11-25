@@ -72,5 +72,4 @@ setup(
         'requests',
         'six'
     ],
-    use_2to3=True
 )
