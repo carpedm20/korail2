@@ -149,11 +149,11 @@ class TestKorail(TestCase):
     def test_search_train(self):
         trains = self.korail.search_train("서울", "부산", self.thetime().strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(trains), 0, "tomorrow train search")
-        print trains
+        print(trains)
 
         alltrains = self.korail.search_train_allday("서울", "부산", self.thetime().strftime("%Y%m%d"), "100000")
         self.assertGreaterEqual(len(alltrains), len(trains), "tomorrow train search")
-        print alltrains
+        print(alltrains)
 
     # def test_reserve(self):
     # self.skipTest("Same to test_cancel")
@@ -173,7 +173,7 @@ class TestKorail(TestCase):
             self.assertIsNotNone(reserves, "get reservation list")
             self.assertIsInstance(reserves, list)
 
-            # print reserves
+            # print(reserves)
         except Exception:
             self.fail(e.message)
             # self.skipTest(e.message)
@@ -239,7 +239,7 @@ class TestKorail(TestCase):
         except NoResultsError:
             self.skipTest("Sold out")
 
-        print trains
+        print(trains)
         empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
         if len(empty_seats) > 0:
             try:
