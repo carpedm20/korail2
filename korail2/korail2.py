@@ -635,18 +635,18 @@ When you want change ID using existing object,
         """Search all trains for specific time and date."""
         min1 = timedelta(minutes=1)
         all_trains = []
-        last_time = time
+        dep_time = time
         for i in range(15):  # 최대 15번 호출
             try:
-                trains = self.search_train(dep, arr, date, last_time, train_type, passengers, True)
+                trains = self.search_train(dep, arr, date, dep_time, train_type, passengers, True)
                 all_trains.extend(trains)
                 # 만약 마지막 승차권의 출발시각이 23시 59분인 경우, 검색 중지. (다음 날 승차권 검색 방지)
-                dep_time = datetime.strptime(all_trains[-1].dep_time, "%H%M%S")
-                if (dep_time.hour == 23) & (dep_time.minute == 59):
+                last_dep_time = datetime.strptime(all_trains[-1].dep_time, "%H%M%S")
+                if (last_dep_time.hour == 23) & (last_dep_time.minute == 59):
                     break
                 # 마지막 열차시간에 1분 더해서 계속 검색.
-                t = dep_time + min1
-                last_time = t.strftime("%H%M%S")
+                t = last_dep_time + min1
+                dep_time = t.strftime("%H%M%S")
             except NoResultsError:
                 break
 
