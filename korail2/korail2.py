@@ -847,7 +847,8 @@ There are 4 options in ReserveOption class.
         if passengers is None:
             passengers = [AdultPassenger()]
 
-        print(train)
+        if self.want_feedback:
+            print(train)
 
         passengers = Passenger.reduce(passengers)
         cnt = reduce(lambda x,y: x + y.count, passengers, 0)
