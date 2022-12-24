@@ -516,7 +516,6 @@ class SoldOutError(KorailError):
 # noinspection PyUnresolvedReferences,PyRedeclaration
 class Korail(object):
     """Korail object"""
-    _session = requests.session()
 
     _device = 'AD'
     _version = '190617001'
@@ -527,6 +526,7 @@ class Korail(object):
     email = None
 
     def __init__(self, korail_id, korail_pw, auto_login=True, want_feedback=False):
+        self._session = requests.Session()
         self._session.headers.update({'User-Agent': DEFAULT_USER_AGENT})
         self.korail_id = korail_id
         self.korail_pw = korail_pw
