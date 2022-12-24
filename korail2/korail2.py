@@ -12,7 +12,6 @@ import itertools
 import sys
 from datetime import datetime, timedelta
 from six import with_metaclass
-from pprint import pprint
 from datetime import timezone
 
 try:
@@ -847,7 +846,8 @@ There are 4 options in ReserveOption class.
         if passengers is None:
             passengers = [AdultPassenger()]
 
-        print(train)
+        if self.want_feedback:
+            print(train)
 
         passengers = Passenger.reduce(passengers)
         cnt = reduce(lambda x,y: x + y.count, passengers, 0)
