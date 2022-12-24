@@ -12,7 +12,6 @@ import itertools
 import sys
 from datetime import datetime, timedelta
 from six import with_metaclass
-from pprint import pprint
 from datetime import timezone
 
 try:
