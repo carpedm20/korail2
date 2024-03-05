@@ -70,6 +70,7 @@ setup(
     ],
     install_requires=[
         'requests',
-        'six'
+        'six',
+        'PyCryptodome'
     ],
 )
