@@ -190,6 +190,13 @@ class Train(Schedule):
     #: 13: 매진
     general_seat = None  # h_gen_rsv_cd
 
+    #: 예약 대기 가능 여부
+    #: -2: 좌석 있음
+    #: 9: 예약 대기 (일반석)
+    #: 0: 예약 대기 없음 (매진)
+    ## 특실의 경우 케이스 예약대기도 09를 사용하는지 확인이 필요함
+    wait_reserve_flag = None # h_wait_rsv_flg
+
     def __init__(self, data):
         super(Train, self).__init__(data)
         self.reserve_possible = _get_utf8(data, 'h_rsv_psb_flg')
@@ -197,6 +204,11 @@ class Train(Schedule):
 
         self.special_seat = _get_utf8(data, 'h_spe_rsv_cd')
         self.general_seat = _get_utf8(data, 'h_gen_rsv_cd')
+
+        self.wait_reserve_flag = _get_utf8(data, 'h_wait_rsv_flg')
+        if self.wait_reserve_flag:
+            self.wait_reserve_flag = int(self.wait_reserve_flag)
+
 
     def __repr__(self):
         repr_str = super(Train, self).__repr__()
@@ -208,6 +220,9 @@ class Train(Schedule):
 
             if self.has_general_seat():
                 seats.append("일반실")
+
+            if self.has_general_waiting_list():
+                seats.append("예약 대기(일반)")
 
             repr_str += " " + (",".join(seats)) + " " + self.reserve_possible_name.replace('\n', ' ')
 
@@ -222,6 +237,11 @@ class Train(Schedule):
     def has_seat(self):
         return self.has_general_seat() or self.has_special_seat()
 
+    def has_waiting_list(self):
+        return self.has_general_waiting_list()
+
+    def has_general_waiting_list(self):
+        return self.wait_reserve_flag == 9
 
 class Ticket(Train):
     """Ticket object"""
@@ -667,14 +687,18 @@ When you want change ID using existing object,
         """Search all trains for specific time and date."""
         min1 = timedelta(minutes=1)
         all_trains = []
-        last_time = time
+        dep_time = time
         for i in range(15):  # 최대 15번 호출
             try:
-                trains = self.search_train(dep, arr, date, last_time, train_type, passengers, True)
+                trains = self.search_train(dep, arr, date, dep_time, train_type, passengers, True)
                 all_trains.extend(trains)
+                # 만약 마지막 승차권의 출발시각이 23시 59분인 경우, 검색 중지. (다음 날 승차권 검색 방지)
+                last_dep_time = datetime.strptime(all_trains[-1].dep_time, "%H%M%S")
+                if (last_dep_time.hour == 23) & (last_dep_time.minute == 59):
+                    break
                 # 마지막 열차시간에 1분 더해서 계속 검색.
-                t = datetime.strptime(all_trains[-1].dep_time, "%H%M%S") + min1
-                last_time = t.strftime("%H%M%S")
+                t = last_dep_time + min1
+                dep_time = t.strftime("%H%M%S")
             except NoResultsError:
                 break
 
@@ -687,7 +711,7 @@ When you want change ID using existing object,
         return all_trains
 
     def search_train(self, dep, arr, date=None, time=None, train_type=TrainType.ALL,
-                     passengers=None, include_no_seats=False):
+                     passengers=None, include_no_seats=False, include_waiting_list=False):
         """Search trains for specific time and date.
 
 :param dep: A departure station in Korean  ex) '서울'
@@ -707,6 +731,7 @@ When you want change ID using existing object,
                    - 09: ITX-청춘
 :param passengers=None: (optional) List of Passenger Objects. None means 1 AdultPassenger.
 :param include_no_seats=False: (optional) When True, a result includes trains which has no seats.
+:param include_waiting_list=False: (optional) When False, a result includes trains which has no seats but can make a wait reservation(예약 대기)'
 
 Below is a sample usage of `search_train`:
 
@@ -768,12 +793,12 @@ There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPass
     ...
 
 """
-        # NOTE: 버그 수정. 코레일에 열차 티켓 리스트 API 요청시 한국시간을 기준으로 함.
-        kst = timezone(timedelta(hours=9))
+        # 코레일에 열차 티켓 리스트 API 요청시 한국시간을 기준으로 함.
+        kst_now = datetime.utcnow() + timedelta(hours=9)
         if date is None:
-            date = datetime.utcnow().astimezone(kst).strftime("%Y%m%d")
+            date = kst_now.strftime("%Y%m%d")
         if time is None:
-            time = datetime.utcnow().astimezone(kst).strftime("%H%M%S")
+            time = kst_now.strftime("%H%M%S")
 
         if passengers is None:
             passengers = [AdultPassenger()]
@@ -824,15 +849,22 @@ There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPass
             for info in train_infos:
                 trains.append(Train(info))
 
-            if not include_no_seats:
-                trains = list(filter(lambda x: x.has_seat(), trains))
+            filter_fns = [lambda x: x.has_seat()]
+
+            if include_no_seats:
+                filter_fns.append(lambda x: not x.has_seat())
+
+            if include_waiting_list:
+                filter_fns.append(lambda x: x.has_waiting_list())
+
+            trains = list(filter(lambda x: any(f(x) for f in filter_fns), trains))
 
             if len(trains) == 0:
                 raise NoResultsError()
 
             return trains
 
-    def reserve(self, train, passengers=None, option=ReserveOption.GENERAL_FIRST):
+    def reserve(self, train, passengers=None, option=ReserveOption.GENERAL_FIRST, try_waiting=False):
         """Reserve a train.
 
 :param train: An instance of `Train`.
@@ -849,32 +881,44 @@ There are 4 options in ReserveOption class.
 - SPECIAL_FIRST : Comfortable than Economic.
 - SPECIAL_ONLY  : Richman.
 
+:param option=try_waiting : (optional)
+
+When the train allows waiting, enroll for the waiting list instead of failing in case there are no seats in the train.
+
         """
 
+        reserving_seat = True
         # 좌석 선택 옵션에 따라 결정.
         seat_type = None
-        if train.has_seat() is False:  # 자리가 둘다 없는 경우는 SoldOutError발생
-            raise SoldOutError()
-        elif option == ReserveOption.GENERAL_ONLY:  # 이후 일반석, 특실 중 하나는 무조건 있는 조건
-            if train.has_general_seat():
-                seat_type = '1'
-            else:
+        try:
+            if train.has_seat() is False:  # 자리가 둘다 없는 경우는 SoldOutError발생
                 raise SoldOutError()
-        elif option == ReserveOption.SPECIAL_ONLY:
-            if train.has_special_seat():
-                seat_type = '2'
-            else:
-                raise SoldOutError()
-        elif option == ReserveOption.GENERAL_FIRST:
-            if train.has_general_seat():
+            elif option == ReserveOption.GENERAL_ONLY:  # 이후 일반석, 특실 중 하나는 무조건 있는 조건
+                if train.has_general_seat():
+                    seat_type = '1'
+                else:
+                    raise SoldOutError()
+            elif option == ReserveOption.SPECIAL_ONLY:
+                if train.has_special_seat():
+                    seat_type = '2'
+                else:
+                    raise SoldOutError()
+            elif option == ReserveOption.GENERAL_FIRST:
+                if train.has_general_seat():
+                    seat_type = '1'
+                else:
+                    seat_type = '2'
+            elif option == ReserveOption.SPECIAL_FIRST:
+                if train.has_special_seat():
+                    seat_type = '2'
+                else:
+                    seat_type = '1'
+        except SoldOutError as e:
+            if try_waiting and option != ReserveOption.SPECIAL_ONLY and train.has_general_waiting_list():
+                reserving_seat = False
                 seat_type = '1'
             else:
-                seat_type = '2'
-        elif option == ReserveOption.SPECIAL_FIRST:
-            if train.has_special_seat():
-                seat_type = '2'
-            else:
-                seat_type = '1'
+                raise e
 
         if passengers is None:
             passengers = [AdultPassenger()]
@@ -889,7 +933,7 @@ There are 4 options in ReserveOption class.
             'Version': self._version,
             'Key': self._key,
             'txtGdNo': '',
-            'txtJobId': '1101',
+            'txtJobId': '1101' if reserving_seat else '1102',
             'txtTotPsgCnt': cnt,
             'txtSeatAttCd1': '000',
             'txtSeatAttCd2': '000',
