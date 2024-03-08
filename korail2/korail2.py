@@ -10,9 +10,14 @@ import re
 import requests
 import itertools
 import sys
+import base64
+
 from datetime import datetime, timedelta
 from six import with_metaclass
 from pprint import pprint
+from datetime import timezone
+from Crypto.Util.Padding import pad
+from Crypto.Cipher import AES
 
 try:
     # noinspection PyPackageRequirements
@@ -54,6 +59,8 @@ KORAIL_EVENT = "%s.common.event" % KORAIL_MOBILE
 KORAIL_PAYMENT = "%s/ebizmw/PrdPkgMainList.do" % KORAIL_DOMAIN
 KORAIL_PAYMENT_VOUCHER = "%s/ebizmw/PrdPkgBoucherView.do" % KORAIL_DOMAIN
 
+KORAIL_CODE = "%s.common.code.do" % KORAIL_MOBILE
+
 DEFAULT_USER_AGENT = "Dalvik/2.1.0 (Linux; U; Android 5.1.1; Nexus 4 Build/LMY48T)"
 
 
@@ -67,7 +74,6 @@ def _get_utf8(data, key, default=None):
         return v.encode('utf-8')
     else:
         return v
-
 
 class Schedule(object):
     """Korail train object. Highly inspired by `korail.py
@@ -541,6 +547,8 @@ class Korail(object):
     _version = '190617001'
     _key = 'korail1234567890'
 
+    _idx = None
+
     membership_number = None
     name = None
     email = None
@@ -553,6 +561,30 @@ class Korail(object):
         self.logined = False
         if auto_login:
             self.login(korail_id, korail_pw)
+
+    def __enc_password(self, password):
+        url = KORAIL_CODE
+        data = {
+            'code': "app.login.cphd"
+        }
+
+        r = self._session.post(url, data=data)
+        j = json.loads(r.text)
+
+        if j['strResult'] == 'SUCC' and j.get('app.login.cphd') is not None:
+            self._idx = j['app.login.cphd']['idx']
+            key = j['app.login.cphd']['key']
+
+            encrypt_key = key.encode(encoding='utf-8', errors='strict')
+            iv = key[:16].encode(encoding='utf-8', errors='strict')
+            cipher = AES.new(encrypt_key, AES.MODE_CBC, iv)
+            
+            padded_data = pad(password.encode("utf-8"), AES.block_size)
+
+            return base64.b64encode(base64.b64encode(cipher.encrypt(padded_data))).decode("utf-8")
+        else:
+            return False
+
 
     def login(self, korail_id=None, korail_pw=None):
         """Login to Korail server.
@@ -602,14 +634,15 @@ When you want change ID using existing object,
         url = KORAIL_LOGIN
         data = {
             'Device': self._device,
-            'Version': '150718001', # HACK
+            'Version': '231231001', # HACK
             #'Version': self._version,
             # 2 : for membership number,
             # 4 : for phone number,
             # 5 : for email,
             'txtInputFlg': txt_input_flg,
             'txtMemberNo': korail_id,
-            'txtPwd': korail_pw
+            'txtPwd': self.__enc_password(korail_pw),
+            'idx': self._idx
         }
 
         r = self._session.post(url, data=data)
