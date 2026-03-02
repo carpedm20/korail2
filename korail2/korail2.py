@@ -11,6 +11,9 @@ import requests
 import itertools
 import sys
 import base64
+import time
+import random
+import string
 
 from datetime import datetime, timedelta
 from six import with_metaclass
@@ -61,8 +64,119 @@ KORAIL_PAYMENT_VOUCHER = "%s/ebizmw/PrdPkgBoucherView.do" % KORAIL_DOMAIN
 
 KORAIL_CODE = "%s.common.code.do" % KORAIL_MOBILE
 
-DEFAULT_USER_AGENT = "Dalvik/2.1.0 (Linux; U; Android 5.1.1; Nexus 4 Build/LMY48T)"
+DEFAULT_USER_AGENT = "Dalvik/2.1.0 (Linux; U; Android 13; SM-S928N Build/UP1A.231005.007)"
 
+DYNAPATH_PATHS = [
+    "/classes/com.korail.mobile.certification.TicketReservation",
+    "/classes/com.korail.mobile.nonMember.NonMemTicket",
+    "/classes/com.korail.mobile.seatMovie.ScheduleView",
+    "/classes/com.korail.mobile.seatMovie.ScheduleViewSpecial",
+    "/classes/com.korail.mobile.trn.prcFare.do",
+    "/classes/com.korail.mobile.login.Login"
+]
+
+class DynaPathMasterEngine:
+    APP_ID = "com.korail.talk"
+    AS_VALUE = "%5B38ff229cb34c7dda8e28220a2d750cce%5D"
+    DEVICE_MODEL = "SM-S928N"
+    OS_TYPE = "Android"
+    SDK_VERSION = "v1"
+
+    def __init__(self):
+        self.TABLE = "3FE9jgRD4KdCyuawklqGJYmvfMn15P7US8XbxeLQtWT6OicBAopINs2Vh0HZrz"
+        self.I8, self.I9, self.I10 = 161, 30, 2
+        self.app_start_ts = str(int(time.time() * 1000))
+
+    def string2xA1s(self, data_str):
+        result = []
+        i = 0
+        while i < len(data_str):
+            cp = ord(data_str[i])
+            i += 1
+            if cp < 128: result.append(cp)
+            elif cp < 2048:
+                result.append(128 | ((cp >> 7) & 15))
+                result.append(cp & 127)
+            elif cp >= 262144:
+                result.append(160)
+                result.append((cp >> 14) & 127)
+                result.append((cp >> 7) & 127)
+                result.append(cp & 127)
+            elif (63488 & cp) != 55296:
+                result.append(((cp >> 14) & 15) | 144)
+                result.append((cp >> 7) & 127)
+                result.append(cp & 127)
+        return result
+
+    def make_key(self, key_str):
+        big_int_add = 0
+        for char in key_str:
+            cp = ord(char)
+            i9_bit = 32768
+            for _ in range(16):
+                if (i9_bit & cp) != 0: break
+                i9_bit >>= 1
+            big_int_add = (big_int_add * (i9_bit << 1)) + cp
+        return big_int_add
+
+    def _internal_i(self, base_table, remainder, encode_size, current_sb):
+        j8_count = 0
+        for k in range(len(base_table)):
+            char = base_table[k]
+            if char not in current_sb:
+                if j8_count == remainder: return char
+                j8_count += 1
+        return ' '
+
+    def make_encode_table(self, num, encode_size, base_table):
+        sb = ""
+        temp_num = num
+        for i in range(encode_size):
+            j8_divisor = encode_size - i
+            remainder = temp_num % j8_divisor
+            char = self._internal_i(base_table, remainder, len(base_table), sb)
+            sb += char
+            temp_num //= j8_divisor
+        return sb
+
+    def encode_normal_be(self, data_str, table, i8=161, i9=30, i10=2):
+        list_data = self.string2xA1s(data_str)
+        sb, i_arr = [], [0] * (i10 + 1)
+        idx, size = 0, len(list_data) % i10
+        size2 = len(list_data) - size
+        while idx < size2:
+            val = 0
+            for _ in range(i10):
+                val = (val * i8) + list_data[idx]
+                idx += 1
+            for i in range(i10 + 1):
+                i_arr[i] = val % i9
+                val //= i9
+            for i in range(i10, -1, -1): sb.append(table[i_arr[i]])
+        if size > 0:
+            val = 0
+            for _ in range(size):
+                val = (val * i8) + list_data[idx]
+                idx += 1
+            for i in range(size + 1):
+                i_arr[i] = val % i9
+                val //= i9
+            while size >= 0:
+                sb.append(table[i_arr[size]])
+                size -= 1
+        return "".join(sb)
+
+    def generate_token(self, device_id, ts, rand):
+        plaintext = (f"ai={self.APP_ID}&di={device_id}&as={self.AS_VALUE}&"
+                     f"su=false&dbg=false&emu=false&hk=false&it={self.app_start_ts}&"
+                     f"ts={ts}&rt=0&os=13&dm={self.DEVICE_MODEL}&st={self.OS_TYPE}&sv={self.SDK_VERSION}")
+        
+        dyn_key = f"v1+{rand}+{ts}"
+        key_enc = self.encode_normal_be(dyn_key, self.TABLE, self.I8, self.I9, self.I10)
+        big_key = self.make_key(dyn_key)
+        custom_table = self.make_encode_table(big_key, self.I9, self.TABLE)
+        body_enc = self.encode_normal_be(plaintext, custom_table, self.I8, self.I9, self.I10)
+        return f"bEeEP{self.TABLE[len(key_enc)]}{key_enc}{body_enc}"
 
 def _get_utf8(data, key, default=None):
     v = data.get(key, default)
@@ -543,8 +657,9 @@ class Korail(object):
     """Korail object"""
     _session = requests.session()
 
-    _device = 'AD'
-    _version = '190617001'
+    _device, _version = 'AD', '250601002'
+    _sid_key = b"2485dd54d9deaa36"
+    _device_id = "558a4f02041657ea"
     _key = 'korail1234567890'
 
     _idx = None
@@ -555,12 +670,29 @@ class Korail(object):
 
     def __init__(self, korail_id, korail_pw, auto_login=True, want_feedback=False):
         self._session.headers.update({'User-Agent': DEFAULT_USER_AGENT})
+        self._engine = DynaPathMasterEngine()
         self.korail_id = korail_id
         self.korail_pw = korail_pw
         self.want_feedback = want_feedback
         self.logined = False
         if auto_login:
             self.login(korail_id, korail_pw)
+
+    def _generate_sid(self, ts):
+        plaintext = (f"{self._device}{ts}").encode('utf-8')
+        cipher = AES.new(self._sid_key, AES.MODE_CBC, iv=self._sid_key)
+        return base64.b64encode(cipher.encrypt(pad(plaintext, 16))).decode('utf-8') + "\n"
+
+    def _get_auth_headers_and_sid(self, url):
+        headers = {}
+        sid = None
+        if any(path in url for path in DYNAPATH_PATHS):
+            ts = int(time.time() * 1000)
+            rand = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            token = self._engine.generate_token(self._device_id, ts, rand)
+            headers['x-dynapath-m-token'] = token
+            sid = self._generate_sid(ts)
+        return headers, sid
 
     def __enc_password(self, password):
         url = KORAIL_CODE
@@ -632,9 +764,11 @@ When you want change ID using existing object,
             txt_input_flg = '2'
 
         url = KORAIL_LOGIN
+        headers, sid = self._get_auth_headers_and_sid(url)
+
         data = {
             'Device': self._device,
-            'Version': '231231001', # HACK
+            'Version': self._version, # HACK
             #'Version': self._version,
             # 2 : for membership number,
             # 4 : for phone number,
@@ -644,8 +778,10 @@ When you want change ID using existing object,
             'txtPwd': self.__enc_password(korail_pw),
             'idx': self._idx
         }
+        if sid:
+            data['Sid'] = sid
 
-        r = self._session.post(url, data=data)
+        r = self._session.post(url, data=data, headers=headers)
         j = json.loads(r.text)
 
         if j['strResult'] == 'SUCC' and j.get('strMbCrdNo') is not None:
@@ -811,6 +947,7 @@ There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPass
         senior_count = reduce(lambda a, b: a + b.count, list(filter(lambda x: isinstance(x, SeniorPassenger), passengers)), 0)
 
         url = KORAIL_SEARCH_SCHEDULE
+        headers, sid = self._get_auth_headers_and_sid(url)
         data = {
             'Device': self._device,
             'radJobId': '1',
@@ -838,7 +975,7 @@ There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPass
         }
 
 
-        r = self._session.get(url, params=data)
+        r = self._session.post(url, params=data, headers=headers)
         j = json.loads(r.text)
 
         if self._result_check(j):
@@ -928,6 +1065,7 @@ When the train allows waiting, enroll for the waiting list instead of failing in
         passengers = Passenger.reduce(passengers)
         cnt = reduce(lambda x,y: x + y.count, passengers, 0)
         url = KORAIL_TICKETRESERVATION
+        headers, sid = self._get_auth_headers_and_sid(url)
         data = {
             'Device': self._device,
             'Version': self._version,
@@ -987,7 +1125,7 @@ When the train allows waiting, enroll for the waiting list instead of failing in
             data.update(psg.get_dict(index))
             index += 1
 
-        r = self._session.get(url, params=data)
+        r = self._session.get(url, params=data, headers=headers)
         j = json.loads(r.text)
         if self._result_check(j):
             rsv_id = j['h_pnr_no']
