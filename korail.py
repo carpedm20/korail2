@@ -3,14 +3,12 @@
 # sudo pip install --upgrade git+https://github.com/carpedm20/korail2.git@sng2c
 
 from korail2 import *
+import os
 import time
 import sys
 
-KORAIL_ID = '0443474772'
-KORAIL_PW = 'illb2ack'
-
-PUSHOVER_APP_TOKEN = 'APP_TOKEN'
-PUSHOVER_USER_TOKEN = 'USER_TOKEN'
+KORAIL_ID = os.environ['KORAIL_ID']
+KORAIL_PW = os.environ['KORAIL_PW']
 
 DEP = '서울'
 ARV = '구포'
@@ -22,7 +20,7 @@ TRAIN_TYPE = TrainType.KTX
 
 def sendnoti(msg):
     pass
-    
+
 k = Korail(KORAIL_ID, KORAIL_PW, auto_login=False)
 if not k.login():
     print "login fail"
@@ -31,7 +29,7 @@ while True:
     notFound = True
     while notFound:
         try:
-            sys.stdout.write( "Finding Seat %s ➜ %s              \r" %(DEP, ARV) )
+            sys.stdout.write("Finding Seat %s ➜ %s              \r" % (DEP, ARV))
             sys.stdout.flush()
             trains = k.search_train_allday(DEP, ARV, DEP_DATE, DEP_TIME, passengers=PSGRS, train_type=TRAIN_TYPE)
             print trains
