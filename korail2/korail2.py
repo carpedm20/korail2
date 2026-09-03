@@ -8,7 +8,6 @@
 """
 import re
 import requests
-import itertools
 import sys
 import base64
 
@@ -327,11 +326,22 @@ class Passenger:
     @staticmethod
     def reduce(passenger_list):
         """Reduce passenger's list."""
+        passenger_list = list(passenger_list)
         if list(filter(lambda x: not isinstance(x, Passenger), passenger_list)):
             raise TypeError("Passengers must be based on Passenger")
 
-        groups = itertools.groupby(passenger_list, lambda x: x.group_key())
-        return list(filter(lambda x: x.count > 0, [reduce(lambda a, b: a + b, g) for k, g in groups]))
+        reduced = []
+        group_indexes = {}
+        for passenger in passenger_list:
+            key = passenger.group_key()
+            if key in group_indexes:
+                index = group_indexes[key]
+                reduced[index] = reduced[index] + passenger
+            else:
+                group_indexes[key] = len(reduced)
+                reduced.append(passenger)
+
+        return list(filter(lambda x: x.count > 0, reduced))
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Passenger is abstract class. Do not make instance.")
@@ -541,7 +551,6 @@ class SoldOutError(KorailError):
 # noinspection PyUnresolvedReferences,PyRedeclaration
 class Korail(object):
     """Korail object"""
-    _session = requests.session()
 
     _device = 'AD'
     _version = '190617001'
@@ -554,6 +563,7 @@ class Korail(object):
     email = None
 
     def __init__(self, korail_id, korail_pw, auto_login=True, want_feedback=False):
+        self._session = requests.session()
         self._session.headers.update({'User-Agent': DEFAULT_USER_AGENT})
         self.korail_id = korail_id
         self.korail_pw = korail_pw
@@ -887,6 +897,15 @@ When the train allows waiting, enroll for the waiting list instead of failing in
 
         """
 
+        valid_options = (
+            ReserveOption.GENERAL_FIRST,
+            ReserveOption.GENERAL_ONLY,
+            ReserveOption.SPECIAL_FIRST,
+            ReserveOption.SPECIAL_ONLY,
+        )
+        if option not in valid_options:
+            raise ValueError("Invalid reserve option: %s" % option)
+
         reserving_seat = True
         # 좌석 선택 옵션에 따라 결정.
         seat_type = None
@@ -922,8 +941,6 @@ When the train allows waiting, enroll for the waiting list instead of failing in
 
         if passengers is None:
             passengers = [AdultPassenger()]
-
-        print(train)
 
         passengers = Passenger.reduce(passengers)
         cnt = reduce(lambda x,y: x + y.count, passengers, 0)
@@ -1067,7 +1084,8 @@ When the train allows waiting, enroll for the waiting list instead of failing in
 
     def cancel(self, rsv):
         """ Cancel Reservation : Canceling is for reservation, for ticket would be Refunding """
-        assert isinstance(rsv, Reservation)
+        if not isinstance(rsv, Reservation):
+            raise TypeError("rsv must be a Reservation instance")
         url = KORAIL_CANCEL
         data = {
             'Device': self._device,
