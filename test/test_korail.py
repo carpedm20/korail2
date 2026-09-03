@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from unittest import TestCase
+from unittest import TestCase, skipUnless
 import os.path
 from datetime import datetime, time, date, timedelta
 from korail2 import *
@@ -22,6 +22,8 @@ requests_log.propagate = True
 
 __author__ = 'sng2c'
 
+RUN_DESTRUCTIVE_TESTS = os.environ.get('KORAIL_RUN_DESTRUCTIVE_TESTS') == '1'
+
 
 class TestKorail(TestCase):
 
@@ -31,13 +33,15 @@ class TestKorail(TestCase):
     def setUp(self):
 
         if not (hasattr(self, "koid") and hasattr(self, "kopw")):
-            
-            if os.environ['KORAIL_ID'] and os.environ['KORAIL_PW']:
-                self.koid = os.environ['KORAIL_ID']
-                self.kopw = os.environ['KORAIL_PW']
+
+            koid = os.environ.get('KORAIL_ID')
+            kopw = os.environ.get('KORAIL_PW')
+            if koid and kopw:
+                self.koid = koid
+                self.kopw = kopw
                 self.korail = Korail(self.koid, self.kopw, auto_login=False)
             else:
-                raise Exception("env KORAIL_ID, KORAIL_PW not defined")
+                self.skipTest("env KORAIL_ID, KORAIL_PW not defined")
 
         if not self.korail.logined:
             if not self.korail.login():
@@ -174,33 +178,35 @@ class TestKorail(TestCase):
             self.assertIsInstance(reserves, list)
 
             # print(reserves)
-        except Exception:
-            self.fail(e.message)
+        except Exception as e:
+            self.fail(str(e))
             # self.skipTest(e.message)
 
+    @skipUnless(RUN_DESTRUCTIVE_TESTS, "set KORAIL_RUN_DESTRUCTIVE_TESTS=1 to modify reservations")
     def test_reserve_and_cancel(self):
         # self.skipTest("Not implemented")
 
 
         trains = self.korail.search_train("서울", "부산", self.thetime().strftime("%Y%m%d"), self.thetime().strftime("%H%M%S"))
 
-        empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
+        empty_seats = list(filter(lambda x: "11" in (x.special_seat, x.general_seat), trains))
         if len(empty_seats) > 0:
             try:
                 rsv = self.korail.reserve(empty_seats[0])
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 1, "make a reservation")
 
                 self.korail.cancel(rsv)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 0, "cancel the reservation")
             except SoldOutError:
                 self.skipTest("Sold Out")
         else:
             self.skipTest("No Empty Seats tomorrow.")
 
+    @skipUnless(RUN_DESTRUCTIVE_TESTS, "set KORAIL_RUN_DESTRUCTIVE_TESTS=1 to modify reservations")
     def test_reserve_and_cancel2(self):
         # self.skipTest("Not implemented")
 
@@ -209,23 +215,24 @@ class TestKorail(TestCase):
         except NoResultsError:
             self.skipTest("Sold out")
 
-        empty_seats = filter(lambda x: x.has_special_seat(), trains)
+        empty_seats = list(filter(lambda x: x.has_special_seat(), trains))
         if len(empty_seats) > 0:
             try:
                 rsv = self.korail.reserve(empty_seats[0], option=ReserveOption.SPECIAL_ONLY)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 1, "make a reservation")
 
                 self.korail.cancel(rsv)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 0, "cancel the reservation")
             except SoldOutError:
                 self.skipTest("Sold Out")
         else:
             self.skipTest("No Empty Seats tomorrow.")
 
+    @skipUnless(RUN_DESTRUCTIVE_TESTS, "set KORAIL_RUN_DESTRUCTIVE_TESTS=1 to modify reservations")
     def test_reserve_and_cancel_multi(self):
         # self.skipTest("Not implemented")
 
@@ -240,23 +247,24 @@ class TestKorail(TestCase):
             self.skipTest("Sold out")
 
         print(trains)
-        empty_seats = filter(lambda x: "11" in (x.special_seat, x.general_seat), trains)
+        empty_seats = list(filter(lambda x: "11" in (x.special_seat, x.general_seat), trains))
         if len(empty_seats) > 0:
             try:
                 rsv = self.korail.reserve(empty_seats[0], passengers=passengers)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 1, "make a reservation")
 
                 self.korail.cancel(rsv)
                 rsvlist = self.korail.reservations()
-                matched = filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist)
+                matched = list(filter(lambda x: x.rsv_id == rsv.rsv_id, rsvlist))
                 self.assertEqual(len(matched), 0, "cancel the reservation")
             except SoldOutError:
                 self.skipTest("Sold Out")
         else:
             self.skipTest("No Empty Seats tomorrow.")
 
+    @skipUnless(RUN_DESTRUCTIVE_TESTS, "set KORAIL_RUN_DESTRUCTIVE_TESTS=1 to cancel all reservations")
     def test_cancel_all(self):
         for rsv in self.korail.reservations():
             res = self.korail.cancel(rsv)
