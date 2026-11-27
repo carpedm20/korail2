@@ -11,6 +11,7 @@ import requests
 import itertools
 import sys
 import base64
+import time
 
 from datetime import datetime, timedelta
 from six import with_metaclass
@@ -18,6 +19,8 @@ from pprint import pprint
 from datetime import timezone
 from Crypto.Util.Padding import pad
 from Crypto.Cipher import AES
+
+from .dynapath import generate_token
 
 try:
     # noinspection PyPackageRequirements
@@ -61,7 +64,16 @@ KORAIL_PAYMENT_VOUCHER = "%s/ebizmw/PrdPkgBoucherView.do" % KORAIL_DOMAIN
 
 KORAIL_CODE = "%s.common.code.do" % KORAIL_MOBILE
 
-DEFAULT_USER_AGENT = "Dalvik/2.1.0 (Linux; U; Android 5.1.1; Nexus 4 Build/LMY48T)"
+DEFAULT_USER_AGENT = "Dalvik/2.1.0 (Linux; U; Android 14; SM-S928N Build/UP1A.231005.007)"
+
+# Endpoints protected by the macro guard: requests must carry an
+# x-dynapath-m-token header and a Sid, and must use POST (GET is answered
+# with the "update the app" MACRO ERROR).
+DYNAPATH_PATHS = (
+    "/classes/com.korail.mobile.certification.TicketReservation",
+    "/classes/com.korail.mobile.seatMovie.ScheduleView",
+    "/classes/com.korail.mobile.login.Login",
+)
 
 
 def _get_utf8(data, key, default=None):
@@ -544,7 +556,8 @@ class Korail(object):
     _session = requests.session()
 
     _device = 'AD'
-    _version = '190617001'
+    _version = '250722001'
+    _sid_key = b"2485dd54d9deaa36"
     _key = 'korail1234567890'
 
     _idx = None
@@ -561,6 +574,23 @@ class Korail(object):
         self.logined = False
         if auto_login:
             self.login(korail_id, korail_pw)
+
+    def _generate_sid(self, ts=None):
+        """AES-CBC encrypt "AD"+epochMillis with the fixed key==iv, Base64."""
+        ts = int(time.time() * 1000) if ts is None else ts
+        cipher = AES.new(self._sid_key, AES.MODE_CBC, iv=self._sid_key)
+        padded = pad(("%s%d" % (self._device, ts)).encode("utf-8"), AES.block_size)
+        return base64.b64encode(cipher.encrypt(padded)).decode("utf-8")
+
+    @staticmethod
+    def _protected_url(url):
+        return url is not None and any(path in url for path in DYNAPATH_PATHS)
+
+    def _auth_headers(self, url):
+        """x-dynapath-m-token header for macro-guarded endpoints, else {}."""
+        if self._protected_url(url):
+            return {'x-dynapath-m-token': generate_token()}
+        return {}
 
     def __enc_password(self, password):
         url = KORAIL_CODE
@@ -634,8 +664,8 @@ When you want change ID using existing object,
         url = KORAIL_LOGIN
         data = {
             'Device': self._device,
-            'Version': '231231001', # HACK
-            #'Version': self._version,
+            'Version': self._version,
+            'Sid': self._generate_sid(),
             # 2 : for membership number,
             # 4 : for phone number,
             # 5 : for email,
@@ -645,7 +675,7 @@ When you want change ID using existing object,
             'idx': self._idx
         }
 
-        r = self._session.post(url, data=data)
+        r = self._session.post(url, data=data, headers=self._auth_headers(url))
         j = json.loads(r.text)
 
         if j['strResult'] == 'SUCC' and j.get('strMbCrdNo') is not None:
@@ -813,6 +843,7 @@ There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPass
         url = KORAIL_SEARCH_SCHEDULE
         data = {
             'Device': self._device,
+            'Sid': self._generate_sid(),
             'radJobId': '1',
             'selGoTrain': train_type,
             'txtCardPsgCnt': '0',
@@ -838,7 +869,7 @@ There are 4 types of Passengers now, AdultPassenger, ChildPassenger, ToddlerPass
         }
 
 
-        r = self._session.get(url, params=data)
+        r = self._session.post(url, data=data, headers=self._auth_headers(url))
         j = json.loads(r.text)
 
         if self._result_check(j):
@@ -987,7 +1018,7 @@ When the train allows waiting, enroll for the waiting list instead of failing in
             data.update(psg.get_dict(index))
             index += 1
 
-        r = self._session.get(url, params=data)
+        r = self._session.post(url, data=data, headers=self._auth_headers(url))
         j = json.loads(r.text)
         if self._result_check(j):
             rsv_id = j['h_pnr_no']
